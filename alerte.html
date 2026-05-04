@@ -18,12 +18,6 @@
     border-left: 5px solid #f97316;
 }
 
-.alert-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-bottom: 8px;
-}
-
 .alert-item {
     padding: 14px 0;
     border-bottom: 1px solid #e2e8f0;
@@ -69,78 +63,64 @@
     color: #991b1b;
     background: #fef2f2;
     border: 1px solid #fecaca;
+    padding: 20px;
+    border-radius: 12px;
 }
 </style>
 </head>
 
 <body>
 
-<button class="menu-toggle" type="button" aria-label="Ouvrir le menu" onclick="toggleMenu()">☰</button>
+<button class="menu-toggle" onclick="toggleMenu()">☰</button>
 <div id="overlay" onclick="closeMenu()"></div>
 
 <div class="app-shell">
 
-    <aside id="sidebar" class="sidebar">
-        <div class="sidebar-brand">
-            <span>IRM Supervision</span>
-            <img src="Logo_IRM.png" alt="Logo IRM">
-        </div>
+<aside id="sidebar" class="sidebar">
+    <div class="sidebar-brand">
+        <span>IRM Supervision</span>
+        <img src="Logo_IRM.png">
+    </div>
 
-        <div class="sidebar-section">
-            <div class="sidebar-title"><span>Monitoring</span><span>⌄</span></div>
-            <nav class="sidebar-menu">
-                <a href="index.html" data-page="index"><span class="dot"></span><span class="label-text">Vue générale</span></a>
-                <a href="atmosphere.html" data-page="atmosphere"><span class="dot"></span><span class="label-text">Atmosphère</span></a>
-                <a href="eaufroide.html" data-page="eaufroide"><span class="dot"></span><span class="label-text">Eau glacée</span></a>
-                <a href="compresseur.html" data-page="compresseur"><span class="dot"></span><span class="label-text">Compresseur</span></a>
-                <a href="groupefroid.html" data-page="groupefroid"><span class="dot"></span><span class="label-text">Groupe froid</span></a>
-            </nav>
-        </div>
+    <div class="sidebar-section">
+        <div class="sidebar-title"><span>Monitoring</span></div>
+        <nav class="sidebar-menu">
+            <a href="index.html"><span class="dot"></span>Vue générale</a>
+            <a href="atmosphere.html"><span class="dot"></span>Atmosphère</a>
+            <a href="eaufroide.html"><span class="dot"></span>Eau glacée</a>
+            <a href="compresseur.html"><span class="dot"></span>Compresseur</a>
+            <a href="groupefroid.html"><span class="dot"></span>Groupe froid</a>
+        </nav>
+    </div>
 
-        <div class="sidebar-section">
-            <div class="sidebar-title"><span>Système</span><span>⌄</span></div>
-            <nav class="sidebar-menu">
-                <a href="alerte.html" data-page="alerte"><span class="dot"></span><span class="label-text">Alertes</span></a>
-                <a href="#"><span class="dot"></span><span class="label-text">Datalogging</span></a>
-                <a href="#"><span class="dot"></span><span class="label-text">Paramètres</span></a>
-            </nav>
-        </div>
+    <div class="sidebar-section">
+        <div class="sidebar-title"><span>Système</span></div>
+        <nav class="sidebar-menu">
+            <a href="alerte.html" class="active"><span class="dot"></span>Alertes</a>
+        </nav>
+    </div>
+</aside>
 
-        <div class="sidebar-footer">
-            Plateforme IRM – INT<br>
-            Consultation distante
-        </div>
-    </aside>
+<main class="main-content">
 
-    <main class="main-content">
+<div class="topbar">
+    <div>
+        <h1 class="page-title">Alertes</h1>
+        <div class="page-subtitle">Seuils de supervision</div>
+    </div>
+</div>
 
-        <div class="topbar">
-            <div>
-                <h1 class="page-title">Alertes</h1>
-                <div class="page-subtitle">
-                    Consultation des seuils configurés pour la supervision IRM
-                </div>
-            </div>
+<div class="container">
+    <div class="card">
+        <h2>Configuration des seuils</h2>
+        <div id="alertes_content">Chargement...</div>
+    </div>
+</div>
 
-            <div class="topbar-actions">
-                <span class="badge-soft">JSON</span>
-                <span class="badge-soft">Lecture seule</span>
-            </div>
-        </div>
-
-        <div class="container">
-            <div class="card">
-                <h2>Configuration des seuils</h2>
-                <div id="alertes_content">Chargement des seuils...</div>
-            </div>
-        </div>
-
-    </main>
+</main>
 </div>
 
 <script>
-document.querySelector('[data-page="alerte"]').classList.add('active');
-
 const CONFIG_SEUILS_PATH = "config_seuils.json";
 
 async function loadSeuils() {
@@ -148,47 +128,37 @@ async function loadSeuils() {
 
     try {
         const response = await fetch(CONFIG_SEUILS_PATH + "?v=" + Date.now());
-
-        if (!response.ok) {
-            throw new Error("Fichier JSON introuvable");
-        }
-
         const seuils = await response.json();
+
         container.innerHTML = renderSeuils(seuils);
 
-    } catch (error) {
-        container.innerHTML = `
-            <div class="card error-box">
-                Impossible de charger le fichier <strong>${CONFIG_SEUILS_PATH}</strong>.<br>
-                Vérifie que le fichier existe bien dans ton dépôt GitHub Pages.
-            </div>
-        `;
-        console.error(error);
+    } catch (e) {
+        container.innerHTML = `<div class="error-box">Erreur chargement JSON</div>`;
     }
+}
+
+function renderRange(cfg) {
+    if (cfg.unit === "state") {
+        return "État surveillé : 0 = OFF / 1 = ON";
+    }
+
+    return `Min : ${cfg.min ?? "--"} ${cfg.unit || ""} | Max : ${cfg.max ?? "--"} ${cfg.unit || ""}`;
 }
 
 function renderSeuils(seuils) {
     let html = `<div class="alert-grid">`;
 
-    for (const deviceId in seuils) {
-        html += `
-            <div class="card alert-card">
-                <h2>${deviceId}</h2>
-        `;
+    for (const device in seuils) {
 
-        const deviceConfig = seuils[deviceId];
+        html += `<div class="card alert-card"><h2>${device}</h2>`;
 
-        for (const mesure in deviceConfig) {
-            const cfg = deviceConfig[mesure];
+        for (const key in seuils[device]) {
+            const cfg = seuils[device][key];
 
             html += `
                 <div class="alert-item">
-                    <div class="alert-label">${cfg.label || mesure}</div>
-                    <div class="alert-range">
-                        Min : ${cfg.min ?? "--"} ${cfg.unit || ""}
-                        &nbsp; | &nbsp;
-                        Max : ${cfg.max ?? "--"} ${cfg.unit || ""}
-                    </div>
+                    <div class="alert-label">${cfg.label || key}</div>
+                    <div class="alert-range">${renderRange(cfg)}</div>
                     <div class="${cfg.enabled ? "alert-enabled" : "alert-disabled"}">
                         ${cfg.enabled ? "Activée" : "Désactivée"}
                     </div>
@@ -204,36 +174,12 @@ function renderSeuils(seuils) {
 }
 
 function toggleMenu() {
-    const sidebar = document.getElementById("sidebar");
-    const main = document.querySelector(".main-content");
-    const overlay = document.getElementById("overlay");
-
-    if (!sidebar || !main || !overlay) return;
-
-    if (window.innerWidth <= 720) {
-        sidebar.classList.toggle("active");
-        overlay.classList.toggle("active");
-    } else {
-        sidebar.classList.toggle("closed");
-        main.classList.toggle("full");
-    }
+    document.getElementById("sidebar").classList.toggle("active");
 }
 
 function closeMenu() {
-    const sidebar = document.getElementById("sidebar");
-    const overlay = document.getElementById("overlay");
-
-    if (!sidebar || !overlay) return;
-
-    sidebar.classList.remove("active");
-    overlay.classList.remove("active");
+    document.getElementById("sidebar").classList.remove("active");
 }
-
-document.querySelectorAll(".sidebar-menu a").forEach(a => {
-    a.addEventListener("click", () => {
-        if (window.innerWidth <= 720) closeMenu();
-    });
-});
 
 loadSeuils();
 </script>
