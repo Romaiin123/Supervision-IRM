@@ -228,7 +228,7 @@
 
             <div class="container">
                 <div class="refresh-row">
-                    <p class="expected-note">2 devices × 1 mesure/min × 24h = <strong>2880 lignes</strong> attendues par jour</p>
+                    <p class="expected-note">2 devices × 1 mesure/min × 24h + en-tête = <strong>2881 lignes</strong> attendues par jour</p>
                     <button class="btn-refresh" onclick="loadData()">↻ Actualiser</button>
                 </div>
 
@@ -254,7 +254,7 @@
     <script>
         const SUPABASE_URL = "https://xkqizqpflgcmyiqluuie.supabase.co";
         const SUPABASE_KEY = "sb_publishable_87i8-j5iiLISsoBSBvC7ng_RlE5TPrr";
-        const EXPECTED = 2880;
+        const EXPECTED = 2881;
         const VISIBLE  = 2;
 
         let allDays = [];
@@ -275,7 +275,11 @@
         function buildCard(day) {
             const { dateStr, daysAgo, lineCount, loaded } = day;
             const isToday = daysAgo === 0;
-            const pct = Math.min(100, Math.round((lineCount / EXPECTED) * 100));
+
+            
+            const pctRaw = loaded ? (lineCount / EXPECTED) * 100 : 0;
+            // Barre de progression plafonnée à 100 visuellement
+            const pctBar = Math.min(100, pctRaw);
 
             let badgeClass, badgeText, valClass, barClass, bottomMsg;
 
@@ -287,11 +291,18 @@
                 badgeClass = 'badge-inprogress'; badgeText = 'En cours';
                 valClass = ''; barClass = 'bar-blue';
                 bottomMsg = `${lineCount.toLocaleString('fr-FR')} lignes enregistrées depuis minuit`;
-            } else if (pct >= 95) {
+            } else if (lineCount > EXPECTED) {
+                badgeClass = 'badge-warn'; badgeText = 'Surplus';
+                valClass = 'warn'; barClass = 'bar-warn';
+                bottomMsg = `⚠ ${(lineCount - EXPECTED).toLocaleString('fr-FR')} lignes en excès — possible doublon d'envoi`;
+            } else if (pctRaw >= 95) {
                 badgeClass = 'badge-ok'; badgeText = 'Complet';
                 valClass = 'ok'; barClass = 'bar-ok';
-                bottomMsg = '✓ Sauvegarde complète — tous les devices ont correctement transmis';
-            } else if (pct >= 70) {
+                const diff = EXPECTED - lineCount;
+                bottomMsg = diff === 0
+                    ? '✓ Sauvegarde complète — tous les devices ont correctement transmis'
+                    : `✓ Quasi-complet — ${diff} ligne${diff > 1 ? 's' : ''} manquante${diff > 1 ? 's' : ''}`;
+            } else if (pctRaw >= 70) {
                 badgeClass = 'badge-warn'; badgeText = 'Incomplet';
                 valClass = 'warn'; barClass = 'bar-warn';
                 bottomMsg = `⚠ Manque ${(EXPECTED - lineCount).toLocaleString('fr-FR')} lignes — possible interruption`;
@@ -301,7 +312,9 @@
                 bottomMsg = `✗ Manque ${(EXPECTED - lineCount).toLocaleString('fr-FR')} lignes — vérifier les devices`;
             }
 
-            const pctStr = (!loaded || isToday) ? '—' : pct + '%';
+            
+            const pctDisplay = Number.isInteger(pctRaw) ? pctRaw + '%' : pctRaw.toFixed(2) + '%';
+            const pctStr = (!loaded || isToday) ? '—' : pctDisplay;
             const receivedStr = loaded ? lineCount.toLocaleString('fr-FR') : '—';
 
             return `
@@ -328,7 +341,7 @@
                         </div>
                     </div>
                     <div class="dl-bar-wrap">
-                        <div class="dl-bar-fill ${barClass}" style="width:${loaded ? pct : 0}%"></div>
+                        <div class="dl-bar-fill ${barClass}" style="width:${loaded ? pctBar : 0}%"></div>
                     </div>
                     <div class="dl-bar-label">${bottomMsg}</div>
                 </div>
