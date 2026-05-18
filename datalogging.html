@@ -7,49 +7,109 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=final">
     <style>
-        .dl-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.25rem;
-            margin-top: 1.5rem;
-        }
-        .dl-card {
-            background: var(--card-bg, #fff);
-            border: 1px solid var(--border, #e5e7eb);
-            border-radius: 12px;
-            padding: 1.25rem 1.5rem;
-        }
-        .dl-card-header {
+        .refresh-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+            gap: 10px;
         }
-        .dl-filename {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text-primary, #111);
+        .expected-note {
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .btn-refresh {
             display: flex;
             align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 14px;
+            cursor: pointer;
+            color: var(--text);
+            transition: background 0.15s;
+        }
+        .btn-refresh:hover { background: var(--surface-2); }
+
+        /* SLIDER */
+        .slider-nav-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-bottom: 1rem;
+        }
+        .nav-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text);
+            font-size: 18px;
+            transition: background 0.15s;
+        }
+        .nav-btn:hover { background: var(--surface-2); }
+        .nav-btn:disabled { opacity: 0.3; cursor: default; }
+        .track-outer {
+            overflow: hidden;
+        }
+        .dl-track {
+            display: flex;
+            gap: 20px;
+            transition: transform 0.3s ease;
+        }
+        .dl-card {
+            flex: 0 0 calc(50% - 10px);
+            min-width: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.35rem 1.5rem;
+            box-sizing: border-box;
+        }
+        .dl-card.today-card {
+            border: 2px solid #378ADD;
+        }
+        .dl-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1rem;
             gap: 8px;
         }
-        .dl-filename span {
+        .dl-filename {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .dl-relday {
             font-size: 12px;
             font-weight: 400;
-            color: var(--text-muted, #6b7280);
+            color: var(--muted);
+            margin-top: 2px;
         }
         .dl-badge {
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
             padding: 3px 10px;
             border-radius: 20px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
-        .badge-ok    { background: #d1fae5; color: #065f46; }
-        .badge-warn  { background: #fef3c7; color: #92400e; }
-        .badge-error { background: #fee2e2; color: #991b1b; }
-        .badge-inprogress { background: #e0e7ff; color: #3730a3; }
+        .badge-ok           { background: #d1fae5; color: #065f46; }
+        .badge-warn         { background: #fef3c7; color: #92400e; }
+        .badge-error        { background: #fee2e2; color: #991b1b; }
+        .badge-inprogress   { background: #e0e7ff; color: #3730a3; }
+        .badge-nodata       { background: #f1f5f9; color: #475569; }
         .dl-stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -57,29 +117,29 @@
             margin-bottom: 1rem;
         }
         .dl-stat {
-            background: var(--stat-bg, #f9fafb);
-            border-radius: 8px;
+            background: var(--surface-2);
+            border-radius: 10px;
             padding: 0.6rem 0.75rem;
         }
         .dl-stat-label {
             font-size: 11px;
-            color: var(--text-muted, #6b7280);
+            color: var(--muted);
             margin-bottom: 3px;
         }
         .dl-stat-value {
             font-size: 18px;
             font-weight: 700;
-            color: var(--text-primary, #111);
+            color: var(--text);
         }
         .dl-stat-value.ok    { color: #059669; }
         .dl-stat-value.warn  { color: #d97706; }
         .dl-stat-value.error { color: #dc2626; }
         .dl-bar-wrap {
-            height: 6px;
-            background: var(--stat-bg, #f3f4f6);
+            height: 5px;
+            background: var(--surface-2);
             border-radius: 3px;
             overflow: hidden;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
         .dl-bar-fill {
             height: 100%;
@@ -89,61 +149,41 @@
         .bar-ok    { background: #059669; }
         .bar-warn  { background: #d97706; }
         .bar-error { background: #dc2626; }
+        .bar-blue  { background: #378ADD; }
         .dl-bar-label {
-            font-size: 12px;
-            color: var(--text-muted, #6b7280);
+            font-size: 11.5px;
+            color: var(--muted);
         }
-        .dl-info-row {
+        .dots-row {
             display: flex;
-            align-items: center;
+            justify-content: center;
             gap: 6px;
-            font-size: 12px;
-            color: var(--text-muted, #6b7280);
-            margin-top: 0.75rem;
-            padding-top: 0.75rem;
-            border-top: 1px solid var(--border, #e5e7eb);
+            margin-top: 1.25rem;
         }
-        .refresh-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.25rem;
-        }
-        .last-update {
-            font-size: 12px;
-            color: var(--text-muted, #6b7280);
-        }
-        .btn-refresh {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            background: none;
-            border: 1px solid var(--border, #e5e7eb);
-            border-radius: 8px;
-            padding: 6px 14px;
+        .dot-btn {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--border);
+            border: none;
+            padding: 0;
             cursor: pointer;
-            color: var(--text-primary, #111);
-            transition: background 0.15s;
+            transition: background 0.2s;
         }
-        .btn-refresh:hover { background: var(--stat-bg, #f3f4f6); }
+        .dot-btn.active { background: #378ADD; }
         .loading-msg {
             text-align: center;
             padding: 3rem;
-            color: var(--text-muted, #6b7280);
+            color: var(--muted);
             font-size: 14px;
         }
-        .error-msg {
-            text-align: center;
-            padding: 2rem;
-            color: #dc2626;
-            font-size: 14px;
+        .last-update {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 1rem;
         }
-        .expected-note {
-            font-size: 13px;
-            color: var(--text-muted, #6b7280);
-            margin-top: 0.25rem;
+        @media (max-width: 600px) {
+            .dl-card { flex: 0 0 calc(100% - 0px); }
         }
     </style>
 </head>
@@ -192,10 +232,18 @@
                     <button class="btn-refresh" onclick="loadData()">↻ Actualiser</button>
                 </div>
 
-                <div id="dl-content">
-                    <div class="loading-msg">Chargement des données...</div>
+                <div class="slider-nav-row">
+                    <button class="nav-btn" id="btn-prev" onclick="slideDir(-1)" disabled title="Jours précédents">&#8592;</button>
+                    <button class="nav-btn" id="btn-next" onclick="slideDir(1)" title="Jours suivants">&#8594;</button>
                 </div>
 
+                <div class="track-outer">
+                    <div class="dl-track" id="dl-track">
+                        <div class="loading-msg">Chargement des données...</div>
+                    </div>
+                </div>
+
+                <div class="dots-row" id="dots-row"></div>
                 <div class="last-update" id="last-update"></div>
             </div>
         </main>
@@ -205,8 +253,12 @@
 
     <script>
         const SUPABASE_URL = "https://xkqizqpflgcmyiqluuie.supabase.co";
-		const SUPABASE_KEY = "sb_publishable_87i8-j5iiLISsoBSBvC7ng_RlE5TPrr";
+        const SUPABASE_KEY = "sb_publishable_87i8-j5iiLISsoBSBvC7ng_RlE5TPrr";
         const EXPECTED = 2880;
+        const VISIBLE  = 2;
+
+        let allDays = [];
+        let offset  = 0;
 
         function getDateStr(daysAgo) {
             const d = new Date();
@@ -214,51 +266,57 @@
             return d.toISOString().slice(0, 10);
         }
 
-        function renderCard(dateStr, lineCount, isToday) {
+        function relLabel(daysAgo) {
+            if (daysAgo === 0) return "aujourd'hui";
+            if (daysAgo === 1) return "hier";
+            return `il y a ${daysAgo} jours`;
+        }
+
+        function buildCard(day) {
+            const { dateStr, daysAgo, lineCount, loaded } = day;
+            const isToday = daysAgo === 0;
             const pct = Math.min(100, Math.round((lineCount / EXPECTED) * 100));
+
             let badgeClass, badgeText, valClass, barClass, bottomMsg;
 
-            if (isToday) {
-                badgeClass = 'badge-inprogress';
-                badgeText  = 'En cours';
-                valClass   = '';
-                barClass   = 'bar-ok';
-                bottomMsg  = `${lineCount.toLocaleString('fr-FR')} lignes enregistrées depuis minuit`;
+            if (!loaded) {
+                badgeClass = 'badge-nodata'; badgeText = 'Aucune donnée';
+                valClass = ''; barClass = 'bar-ok';
+                bottomMsg = 'Aucune donnée disponible pour ce jour';
+            } else if (isToday) {
+                badgeClass = 'badge-inprogress'; badgeText = 'En cours';
+                valClass = ''; barClass = 'bar-blue';
+                bottomMsg = `${lineCount.toLocaleString('fr-FR')} lignes enregistrées depuis minuit`;
             } else if (pct >= 95) {
-                badgeClass = 'badge-ok';
-                badgeText  = 'Complet';
-                valClass   = 'ok';
-                barClass   = 'bar-ok';
-                bottomMsg  = '✓ Sauvegarde complète — tous les devices ont correctement transmis';
+                badgeClass = 'badge-ok'; badgeText = 'Complet';
+                valClass = 'ok'; barClass = 'bar-ok';
+                bottomMsg = '✓ Sauvegarde complète — tous les devices ont correctement transmis';
             } else if (pct >= 70) {
-                badgeClass = 'badge-warn';
-                badgeText  = 'Incomplet';
-                valClass   = 'warn';
-                barClass   = 'bar-warn';
-                bottomMsg  = `⚠ Manque ${(EXPECTED - lineCount).toLocaleString('fr-FR')} lignes — possible interruption de communication`;
+                badgeClass = 'badge-warn'; badgeText = 'Incomplet';
+                valClass = 'warn'; barClass = 'bar-warn';
+                bottomMsg = `⚠ Manque ${(EXPECTED - lineCount).toLocaleString('fr-FR')} lignes — possible interruption`;
             } else {
-                badgeClass = 'badge-error';
-                badgeText  = 'Problème';
-                valClass   = 'error';
-                barClass   = 'bar-error';
-                bottomMsg  = `✗ Manque ${(EXPECTED - lineCount).toLocaleString('fr-FR')} lignes — vérifier les devices et la connexion`;
+                badgeClass = 'badge-error'; badgeText = 'Problème';
+                valClass = 'error'; barClass = 'bar-error';
+                bottomMsg = `✗ Manque ${(EXPECTED - lineCount).toLocaleString('fr-FR')} lignes — vérifier les devices`;
             }
 
-            const label = isToday ? "aujourd'hui" : "hier";
+            const pctStr = (!loaded || isToday) ? '—' : pct + '%';
+            const receivedStr = loaded ? lineCount.toLocaleString('fr-FR') : '—';
 
             return `
-                <div class="dl-card">
+                <div class="dl-card${isToday ? ' today-card' : ''}">
                     <div class="dl-card-header">
-                        <div class="dl-filename">
-                            📄 ${dateStr}.csv
-                            <span>${label}</span>
+                        <div>
+                            <div class="dl-filename">📄 ${dateStr}.csv</div>
+                            <div class="dl-relday">${relLabel(daysAgo)}</div>
                         </div>
                         <span class="dl-badge ${badgeClass}">${badgeText}</span>
                     </div>
                     <div class="dl-stats">
                         <div class="dl-stat">
                             <div class="dl-stat-label">Lignes reçues</div>
-                            <div class="dl-stat-value ${valClass}">${lineCount.toLocaleString('fr-FR')}</div>
+                            <div class="dl-stat-value ${valClass}">${receivedStr}</div>
                         </div>
                         <div class="dl-stat">
                             <div class="dl-stat-label">Attendues</div>
@@ -266,60 +324,98 @@
                         </div>
                         <div class="dl-stat">
                             <div class="dl-stat-label">Complétion</div>
-                            <div class="dl-stat-value ${valClass}">${pct}%</div>
+                            <div class="dl-stat-value ${valClass}">${pctStr}</div>
                         </div>
                     </div>
                     <div class="dl-bar-wrap">
-                        <div class="dl-bar-fill ${barClass}" style="width:${pct}%"></div>
+                        <div class="dl-bar-fill ${barClass}" style="width:${loaded ? pct : 0}%"></div>
                     </div>
                     <div class="dl-bar-label">${bottomMsg}</div>
                 </div>
             `;
         }
 
-        async function loadData() {
-            document.getElementById('dl-content').innerHTML = '<div class="loading-msg">Chargement...</div>';
+        function renderSlider() {
+            const track = document.getElementById('dl-track');
+            track.innerHTML = allDays.map(d => buildCard(d)).join('');
 
-            const today     = getDateStr(0);
-            const yesterday = getDateStr(1);
-            const todayFile = today + '.csv';
-            const yestFile  = yesterday + '.csv';
+            const maxOffset = Math.max(0, allDays.length - VISIBLE);
+            const cardW = (track.parentElement.offsetWidth - 20) / 2;
+            const shift = offset * (cardW + 20);
+            track.style.transform = `translateX(-${shift}px)`;
 
-            try {
-                const res = await fetch(
-                    `${SUPABASE_URL}/rest/v1/measurements?select=device_id,line_count,timestamp&device_id=in.(${todayFile},${yestFile})&order=timestamp.desc`,
-                    {
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`
-                        }
-                    }
-                );
+            document.getElementById('btn-prev').disabled = offset <= 0;
+            document.getElementById('btn-next').disabled = offset >= maxOffset;
 
-                if (!res.ok) throw new Error(`Erreur Supabase : ${res.status}`);
-                const rows = await res.json();
-
-                const byDate = {};
-                for (const row of rows) {
-                    if (!byDate[row.device_id]) byDate[row.device_id] = row.line_count;
-                }
-
-                const todayCount = byDate[todayFile]  ?? 0;
-                const yestCount  = byDate[yestFile]   ?? 0;
-
-                let html = '<div class="dl-grid">';
-                html += renderCard(yesterday, yestCount, false);
-                html += renderCard(today,     todayCount, true);
-                html += '</div>';
-
-                document.getElementById('dl-content').innerHTML = html;
-                document.getElementById('last-update').textContent =
-                    'Mis à jour le ' + new Date().toLocaleString('fr-FR');
-
-            } catch (e) {
-                document.getElementById('dl-content').innerHTML =
-                    `<div class="error-msg">Impossible de charger les données.<br><small>${e.message}</small></div>`;
+            const dotsRow = document.getElementById('dots-row');
+            dotsRow.innerHTML = '';
+            for (let i = 0; i <= maxOffset; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'dot-btn' + (i === offset ? ' active' : '');
+                btn.setAttribute('aria-label', `Aller à la position ${i + 1}`);
+                btn.addEventListener('click', () => { offset = i; renderSlider(); });
+                dotsRow.appendChild(btn);
             }
+        }
+
+        function slideDir(dir) {
+            const maxOffset = Math.max(0, allDays.length - VISIBLE);
+            offset = Math.max(0, Math.min(maxOffset, offset + dir));
+            renderSlider();
+        }
+
+        async function getLinesForDay(dateStr) {
+            const start = dateStr + 'T00:00:00.000Z';
+            const end   = dateStr + 'T23:59:59.999Z';
+            const res = await fetch(
+                `${SUPABASE_URL}/rest/v1/measurements?timestamp=gte.${start}&timestamp=lte.${end}&select=id`,
+                {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Prefer': 'count=exact',
+                        'Range-Unit': 'items',
+                        'Range': '0-0'
+                    }
+                }
+            );
+            const contentRange = res.headers.get('content-range');
+            if (contentRange) {
+                const match = contentRange.match(/\/(\d+)/);
+                if (match) return parseInt(match[1], 10);
+            }
+            const data = await res.json();
+            return Array.isArray(data) ? data.length : 0;
+        }
+
+        async function loadData() {
+            document.getElementById('dl-track').innerHTML = '<div class="loading-msg">Chargement...</div>';
+            document.getElementById('dots-row').innerHTML = '';
+            allDays = [];
+
+            const days = [];
+            for (let i = 6; i >= 0; i--) {
+                days.push({ daysAgo: i, dateStr: getDateStr(i) });
+            }
+
+            const results = await Promise.allSettled(
+                days.map(d => getLinesForDay(d.dateStr))
+            );
+
+            allDays = days.map((d, idx) => {
+                const r = results[idx];
+                return {
+                    ...d,
+                    lineCount: r.status === 'fulfilled' ? r.value : 0,
+                    loaded: r.status === 'fulfilled'
+                };
+            });
+
+            offset = Math.max(0, allDays.length - VISIBLE);
+            renderSlider();
+
+            document.getElementById('last-update').textContent =
+                'Mis à jour le ' + new Date().toLocaleString('fr-FR');
         }
 
         loadData();
