@@ -45,20 +45,19 @@ canvas {
 .chart-controls button {
     padding: 8px 12px;
     border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--surface-2);
-    color: var(--text);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: #0f172a;
+    color: #334155;
     font-size: 0.95rem;
     font-family: inherit;
     cursor: pointer;
-    transition: background 0.15s ease;
 }
 
 .chart-controls button:hover,
 .chart-controls select:hover {
-    background: var(--border);
+    background: #1e293b;
 }
-    
+
 .info-note {
     margin-top: 8px;
     color: #94a3b8;
@@ -125,14 +124,19 @@ canvas {
             </div>
 
             <nav class="sidebar-menu">
-                <a href="alerte.html" data-page="alerte">
+                <a href="#">
                     <span class="dot"></span>
                     <span class="label-text">Alertes</span>
                 </a>
 
-                <a href="datalogging.html" data-page="datalogging">
+                <a href="#">
                     <span class="dot"></span>
                     <span class="label-text">Datalogging</span>
+                </a>
+
+                <a href="#">
+                    <span class="dot"></span>
+                    <span class="label-text">Paramètres</span>
                 </a>
             </nav>
         </div>
@@ -179,8 +183,10 @@ canvas {
                 <option value="72">3 jours</option>
                 <option value="96">4 jours</option>
             </select>
-            <button onclick="zoomIn()">Zoom +</button>
-            <button onclick="zoomOut()">Zoom -</button>
+            <button onclick="zoomIn()">Zoom X +</button>
+            <button onclick="zoomOut()">Zoom X -</button>
+            <button onclick="zoomYIn()">Zoom Y +</button>
+            <button onclick="zoomYOut()">Zoom Y -</button>
             <button onclick="setAutoYScale()">Amplitude auto</button>
             <button onclick="resetZoom()">Réinitialiser zoom</button>
         </div>
@@ -418,12 +424,34 @@ function setAutoYScale() {
 
 function zoomIn() {
     if (!atmoChart) return;
-    atmoChart.zoom(1.2);
+    atmoChart.zoom({ x: 1.2 });
 }
 
 function zoomOut() {
     if (!atmoChart) return;
-    atmoChart.zoom(0.8);
+    atmoChart.zoom({ x: 0.8 });
+}
+
+function zoomYIn() {
+    if (!atmoChart) return;
+    const yScale = atmoChart.options.scales.y;
+    const center = (yScale.min + yScale.max) / 2;
+    const halfRange = (yScale.max - yScale.min) / 2;
+    const newHalf = halfRange * 0.7;
+    yScale.min = Math.round((center - newHalf) * 100) / 100;
+    yScale.max = Math.round((center + newHalf) * 100) / 100;
+    atmoChart.update();
+}
+
+function zoomYOut() {
+    if (!atmoChart) return;
+    const yScale = atmoChart.options.scales.y;
+    const center = (yScale.min + yScale.max) / 2;
+    const halfRange = (yScale.max - yScale.min) / 2;
+    const newHalf = halfRange * 1.4;
+    yScale.min = Math.round((center - newHalf) * 100) / 100;
+    yScale.max = Math.round((center + newHalf) * 100) / 100;
+    atmoChart.update();
 }
 
 function resetZoom() {
