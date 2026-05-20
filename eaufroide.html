@@ -173,9 +173,10 @@
                 <option value="72">3 jours</option>
                 <option value="96">4 jours</option>
             </select>
-            <button onclick="zoomIn()">Zoom +</button>
-            <button onclick="zoomOut()">Zoom -</button>
-            <button onclick="setAutoYScale()">Amplitude auto</button>
+            <button onclick="zoomIn()">Zoom X +</button>
+            <button onclick="zoomOut()">Zoom X -</button>
+            <button onclick="zoomYIn()">Zoom Y +</button>
+            <button onclick="zoomYOut()">Zoom Y -</button>
             <button onclick="resetZoom()">Réinitialiser zoom</button>
         </div>
 
@@ -387,31 +388,41 @@ function createChart(data) {
     });
 }
 
-function setAutoYScale() {
-    if (!waterChart || currentData.length === 0) return;
-
-    const values = currentData.map(d => d.temperature);
-    const bounds = getSuggestedYBounds(values, 0.25);
-
-    waterChart.options.scales.y.min = bounds.min;
-    waterChart.options.scales.y.max = bounds.max;
-    waterChart.update();
-}
-
 function zoomIn() {
     if (!waterChart) return;
-    waterChart.zoom(1.2);
+    waterChart.zoom({ x: 1.2 });
 }
 
 function zoomOut() {
     if (!waterChart) return;
-    waterChart.zoom(0.8);
+    waterChart.zoom({ x: 0.8 });
+}
+
+function zoomYIn() {
+    if (!waterChart) return;
+    const yScale = waterChart.options.scales.y;
+    const center = (yScale.min + yScale.max) / 2;
+    const halfRange = (yScale.max - yScale.min) / 2;
+    const newHalf = halfRange * 0.7;
+    yScale.min = Math.round((center - newHalf) * 100) / 100;
+    yScale.max = Math.round((center + newHalf) * 100) / 100;
+    waterChart.update();
+}
+
+function zoomYOut() {
+    if (!waterChart) return;
+    const yScale = waterChart.options.scales.y;
+    const center = (yScale.min + yScale.max) / 2;
+    const halfRange = (yScale.max - yScale.min) / 2;
+    const newHalf = halfRange * 1.4;
+    yScale.min = Math.round((center - newHalf) * 100) / 100;
+    yScale.max = Math.round((center + newHalf) * 100) / 100;
+    waterChart.update();
 }
 
 function resetZoom() {
     if (!waterChart) return;
     waterChart.resetZoom();
-    setAutoYScale();
 }
 
 async function refreshValues() {
