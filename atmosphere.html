@@ -45,19 +45,20 @@ canvas {
 .chart-controls button {
     padding: 8px 12px;
     border-radius: 8px;
-    border: 1px solid rgba(148, 163, 184, 0.3);
-    background: #0f172a;
-    color: #334155;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
     font-size: 0.95rem;
     font-family: inherit;
     cursor: pointer;
+    transition: background 0.15s ease;
 }
 
 .chart-controls button:hover,
 .chart-controls select:hover {
-    background: #1e293b;
+    background: var(--border);
 }
-
+    
 .info-note {
     margin-top: 8px;
     color: #94a3b8;
