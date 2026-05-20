@@ -227,7 +227,9 @@
 
             <div class="container">
                 <div class="refresh-row">
-                    <p class="expected-note">2 devices × 1 mesure/min × 24h + en-tête = <strong>2881 lignes</strong> attendues par jour</p>
+                    <p class="expected-note">
+                        Nombre de lignes comptées à minuit par le Pi dans le fichier CSV du jour — <strong>2 881 lignes</strong> attendues par jour complet
+                    </p>
                     <button class="btn-refresh" onclick="loadData()">↻ Actualiser</button>
                 </div>
 
@@ -275,46 +277,57 @@
             const { dateStr, daysAgo, lineCount, loaded } = day;
             const isToday = daysAgo === 0;
 
-            
             const pctRaw = loaded ? (lineCount / EXPECTED) * 100 : 0;
-            // Barre de progression plafonnée à 100 visuellement
             const pctBar = Math.min(100, pctRaw);
 
             let badgeClass, badgeText, valClass, barClass, bottomMsg;
 
-            if (!loaded) {
-                badgeClass = 'badge-nodata'; badgeText = 'Aucune donnée';
-                valClass = ''; barClass = 'bar-ok';
-                bottomMsg = 'Aucune donnée disponible pour ce jour';
-            } else if (isToday) {
-                badgeClass = 'badge-inprogress'; badgeText = 'En cours';
-                valClass = ''; barClass = 'bar-blue';
-                bottomMsg = `${lineCount.toLocaleString('fr-FR')} lignes enregistrées depuis minuit`;
+            if (isToday) {
+                // Aujourd'hui : résumé pas encore envoyé par le Pi (minuit pas atteint)
+                badgeClass = 'badge-inprogress';
+                badgeText  = 'En cours';
+                valClass   = '';
+                barClass   = 'bar-blue';
+                bottomMsg  = 'Le Pi enverra le bilan à minuit';
+            } else if (!loaded) {
+                badgeClass = 'badge-nodata';
+                badgeText  = 'Aucune donnée';
+                valClass   = '';
+                barClass   = 'bar-ok';
+                bottomMsg  = 'Aucun résumé reçu pour ce jour — Pi éteint ou erreur réseau à minuit';
             } else if (lineCount > EXPECTED) {
-                badgeClass = 'badge-warn'; badgeText = 'Surplus';
-                valClass = 'warn'; barClass = 'bar-warn';
-                bottomMsg = `⚠ ${(lineCount - EXPECTED).toLocaleString('fr-FR')} lignes en excès — possible doublon d'envoi`;
+                badgeClass = 'badge-warn';
+                badgeText  = 'Surplus';
+                valClass   = 'warn';
+                barClass   = 'bar-warn';
+                bottomMsg  = `⚠ ${(lineCount - EXPECTED).toLocaleString('fr-FR')} lignes en excès — possible doublon d'envoi`;
             } else if (pctRaw >= 95) {
-                badgeClass = 'badge-ok'; badgeText = 'Complet';
-                valClass = 'ok'; barClass = 'bar-ok';
+                badgeClass = 'badge-ok';
+                badgeText  = 'Complet';
+                valClass   = 'ok';
+                barClass   = 'bar-ok';
                 const diff = EXPECTED - lineCount;
-                bottomMsg = diff === 0
+                bottomMsg  = diff === 0
                     ? '✓ Sauvegarde complète — tous les devices ont correctement transmis'
                     : `✓ Quasi-complet — ${diff} ligne${diff > 1 ? 's' : ''} manquante${diff > 1 ? 's' : ''}`;
             } else if (pctRaw >= 70) {
-                badgeClass = 'badge-warn'; badgeText = 'Incomplet';
-                valClass = 'warn'; barClass = 'bar-warn';
-                bottomMsg = `⚠ Manque ${(EXPECTED - lineCount).toLocaleString('fr-FR')} lignes — possible interruption`;
+                badgeClass = 'badge-warn';
+                badgeText  = 'Incomplet';
+                valClass   = 'warn';
+                barClass   = 'bar-warn';
+                bottomMsg  = `⚠ Manque ${(EXPECTED - lineCount).toLocaleString('fr-FR')} lignes — possible interruption`;
             } else {
-                badgeClass = 'badge-error'; badgeText = 'Problème';
-                valClass = 'error'; barClass = 'bar-error';
-                bottomMsg = `✗ Manque ${(EXPECTED - lineCount).toLocaleString('fr-FR')} lignes — vérifier les devices`;
+                badgeClass = 'badge-error';
+                badgeText  = 'Problème';
+                valClass   = 'error';
+                barClass   = 'bar-error';
+                bottomMsg  = `✗ Manque ${(EXPECTED - lineCount).toLocaleString('fr-FR')} lignes — vérifier les devices`;
             }
 
-            
-            const pctDisplay = Number.isInteger(pctRaw) ? pctRaw + '%' : pctRaw.toFixed(2) + '%';
-            const pctStr = (!loaded || isToday) ? '—' : pctDisplay;
-            const receivedStr = loaded ? lineCount.toLocaleString('fr-FR') : '—';
+            // Complétion et lignes reçues : masquées pour aujourd'hui
+            const pctDisplay  = Number.isInteger(pctRaw) ? pctRaw + '%' : pctRaw.toFixed(2) + '%';
+            const pctStr      = (!loaded || isToday) ? '—' : pctDisplay;
+            const receivedStr = (loaded && !isToday) ? lineCount.toLocaleString('fr-FR') : '—';
 
             return `
                 <div class="dl-card${isToday ? ' today-card' : ''}">
@@ -332,7 +345,7 @@
                         </div>
                         <div class="dl-stat">
                             <div class="dl-stat-label">Attendues</div>
-                            <div class="dl-stat-value">${EXPECTED.toLocaleString('fr-FR')}</div>
+                            <div class="dl-stat-value">${isToday ? '—' : EXPECTED.toLocaleString('fr-FR')}</div>
                         </div>
                         <div class="dl-stat">
                             <div class="dl-stat-label">Complétion</div>
@@ -340,7 +353,7 @@
                         </div>
                     </div>
                     <div class="dl-bar-wrap">
-                        <div class="dl-bar-fill ${barClass}" style="width:${loaded ? pctBar : 0}%"></div>
+                        <div class="dl-bar-fill ${barClass}" style="width:${(loaded && !isToday) ? pctBar : 0}%"></div>
                     </div>
                     <div class="dl-bar-label">${bottomMsg}</div>
                 </div>
@@ -352,8 +365,8 @@
             track.innerHTML = allDays.map(d => buildCard(d)).join('');
 
             const maxOffset = Math.max(0, allDays.length - VISIBLE);
-            const cardW = (track.parentElement.offsetWidth - 20) / 2;
-            const shift = offset * (cardW + 20);
+            const cardW     = (track.parentElement.offsetWidth - 20) / 2;
+            const shift     = offset * (cardW + 20);
             track.style.transform = `translateX(-${shift}px)`;
 
             document.getElementById('btn-prev').disabled = offset <= 0;
@@ -376,33 +389,32 @@
             renderSlider();
         }
 
-        async function getLinesForDay(dateStr) {
-            const start = dateStr + 'T00:00:00.000Z';
-            const end   = dateStr + 'T23:59:59.999Z';
+        // Récupère le line_count envoyé à minuit par main.py pour un jour passé.
+        // main.py envoie : { device_id: "2026-05-19.csv", line_count: 2881 }
+        // Pour aujourd'hui on ne cherche rien → retourne null directement.
+        async function getLinesForDay(dateStr, daysAgo) {
+            if (daysAgo === 0) return null; // pas encore clôturé
+
             const res = await fetch(
-                `${SUPABASE_URL}/rest/v1/measurements?timestamp=gte.${start}&timestamp=lte.${end}&select=id`,
+                `${SUPABASE_URL}/rest/v1/measurements?device_id=eq.${dateStr}.csv&select=line_count&limit=1`,
                 {
                     headers: {
                         'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
-                        'Prefer': 'count=exact',
-                        'Range-Unit': 'items',
-                        'Range': '0-0'
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
                     }
                 }
             );
-            const contentRange = res.headers.get('content-range');
-            if (contentRange) {
-                const match = contentRange.match(/\/(\d+)/);
-                if (match) return parseInt(match[1], 10);
-            }
+
+            if (!res.ok) return null;
+
             const data = await res.json();
-            return Array.isArray(data) ? data.length : 0;
+            if (!Array.isArray(data) || data.length === 0) return null;
+            return data[0].line_count ?? null;
         }
 
         async function loadData() {
-            document.getElementById('dl-track').innerHTML = '<div class="loading-msg">Chargement...</div>';
-            document.getElementById('dots-row').innerHTML = '';
+            document.getElementById('dl-track').innerHTML  = '<div class="loading-msg">Chargement...</div>';
+            document.getElementById('dots-row').innerHTML  = '';
             allDays = [];
 
             const days = [];
@@ -411,15 +423,16 @@
             }
 
             const results = await Promise.allSettled(
-                days.map(d => getLinesForDay(d.dateStr))
+                days.map(d => getLinesForDay(d.dateStr, d.daysAgo))
             );
 
             allDays = days.map((d, idx) => {
-                const r = results[idx];
+                const r         = results[idx];
+                const lineCount = (r.status === 'fulfilled' && r.value !== null) ? r.value : null;
                 return {
                     ...d,
-                    lineCount: r.status === 'fulfilled' ? r.value : 0,
-                    loaded: r.status === 'fulfilled'
+                    lineCount: lineCount ?? 0,
+                    loaded:    lineCount !== null
                 };
             });
 
@@ -435,9 +448,9 @@
 
     <script>
         function toggleMenu() {
-            const sidebar = document.getElementById("sidebar");
-            const main = document.querySelector(".main-content");
-            const overlay = document.getElementById("overlay");
+            const sidebar  = document.getElementById("sidebar");
+            const main     = document.querySelector(".main-content");
+            const overlay  = document.getElementById("overlay");
             if (!sidebar || !main || !overlay) return;
             if (window.innerWidth <= 720) {
                 sidebar.classList.toggle("active");
