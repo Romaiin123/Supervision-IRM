@@ -37,7 +37,7 @@ canvas {
 }
 
 .chart-controls label {
-    color: #334155;
+    color: var(--text);
     font-weight: 600;
 }
 
@@ -45,17 +45,18 @@ canvas {
 .chart-controls button {
     padding: 8px 12px;
     border-radius: 8px;
-    border: 1px solid rgba(148, 163, 184, 0.3);
-    background: #0f172a;
-    color: #334155;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
     font-size: 0.95rem;
     font-family: inherit;
     cursor: pointer;
+    transition: background 0.15s ease;
 }
 
 .chart-controls button:hover,
 .chart-controls select:hover {
-    background: #1e293b;
+    background: var(--border);
 }
 
 .info-note {
@@ -187,7 +188,6 @@ canvas {
             <button onclick="zoomOut()">Zoom X -</button>
             <button onclick="zoomYIn()">Zoom Y +</button>
             <button onclick="zoomYOut()">Zoom Y -</button>
-            <button onclick="setAutoYScale()">Amplitude auto</button>
             <button onclick="resetZoom()">Réinitialiser zoom</button>
         </div>
 
