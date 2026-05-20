@@ -27,23 +27,32 @@
 .chart-controls {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 10px;
     margin: 18px 0 10px 0;
 }
 
-.chart-controls button {
-    background: #1e293b;
-    color: #334155;
-    border: 1px solid #334155;
+.chart-controls label {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.chart-controls button,
+.chart-controls select {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 8px 12px;
     cursor: pointer;
     font-family: inherit;
     font-size: 0.95rem;
+    transition: background 0.15s ease;
 }
 
-.chart-controls button:hover {
-    background: #334155;
+.chart-controls button:hover,
+.chart-controls select:hover {
+    background: var(--border);
 }
 
 .info-note {
@@ -135,9 +144,9 @@
 
         <div class="topbar">
             <div>
-                <h1 class="page-title">Données atmosphériques</h1>
+                <h1 class="page-title">Données eau glacée</h1>
                 <div class="page-subtitle">
-                    Température, humidité et pression de la salle IRM
+                    Température du circuit eau glacée (sonde NTC)
                 </div>
             </div>
 
@@ -157,6 +166,13 @@
         <div class="timestamp" id="water_time"></div>
 
         <div class="chart-controls">
+            <label for="water_range_select">Plage température :</label>
+            <select id="water_range_select">
+                <option value="24">24 h</option>
+                <option value="48">48 h</option>
+                <option value="72">3 jours</option>
+                <option value="96">4 jours</option>
+            </select>
             <button onclick="zoomIn()">Zoom +</button>
             <button onclick="zoomOut()">Zoom -</button>
             <button onclick="setAutoYScale()">Amplitude auto</button>
@@ -182,6 +198,7 @@ const SUPABASE_KEY = "sb_publishable_87i8-j5iiLISsoBSBvC7ng_RlE5TPrr";
 
 let waterChart;
 let currentData = [];
+let currentRangeHours = 24;
 
 function formatLocalTime(utcString) {
     const date = new Date(utcString);
@@ -236,11 +253,11 @@ async function fetchLatest(device) {
     return data[0];
 }
 
-async function fetchLast6Hours(device) {
-    const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+async function fetchRange(device, hours) {
+    const startDate = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 
     const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/measurements?device_id=eq.${device}&timestamp=gte.${sixHoursAgo}&order=timestamp.asc`,
+        `${SUPABASE_URL}/rest/v1/measurements?device_id=eq.${device}&timestamp=gte.${startDate}&order=timestamp.asc&limit=6000`,
         {
             headers: {
                 "apikey": SUPABASE_KEY,
@@ -276,8 +293,10 @@ function createChart(data) {
 
     const labels = data.map(d => {
         const date = new Date(d.timestamp);
-        return date.toLocaleTimeString("fr-FR", {
+        return date.toLocaleString("fr-FR", {
             timeZone: "Europe/Paris",
+            day: "2-digit",
+            month: "2-digit",
             hour: "2-digit",
             minute: "2-digit",
             hour12: false
@@ -410,21 +429,25 @@ async function refreshValues() {
 }
 
 async function loadChart() {
-    const data = await fetchLast6Hours("arduino_ntc_01");
+    const data = await fetchRange("arduino_ntc_01", currentRangeHours);
     currentData = data;
 
-    if (waterChart) {
-        waterChart.destroy();
-    }
-
+    if (waterChart) waterChart.destroy();
     waterChart = createChart(data);
 }
+
+document.getElementById("water_range_select").addEventListener("change", async function () {
+    currentRangeHours = Number(this.value);
+    await loadChart();
+});
 
 refreshValues();
 loadChart();
 
 setInterval(refreshValues, 30000);
-setInterval(loadChart, 60000);
+setInterval(async () => {
+    if (currentRangeHours === 24) await loadChart();
+}, 60000);
 </script>
 
 <script>
