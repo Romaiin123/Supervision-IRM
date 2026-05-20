@@ -70,7 +70,7 @@
 }
 
 .chart-controls label {
-    color: #334155;
+    color: var(--text);
     font-weight: 600;
 }
 
@@ -78,17 +78,18 @@
 .chart-controls button {
     padding: 8px 12px;
     border-radius: 8px;
-    border: 1px solid #cbd5e1;
-    background: #ffffff;
-    color: #334155;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
     font-size: 0.95rem;
     font-family: inherit;
     cursor: pointer;
+    transition: background 0.15s ease;
 }
 
 .chart-controls button:hover,
 .chart-controls select:hover {
-    background: #f1f5f9;
+    background: var(--border);
 }
 
 .info-note {
@@ -211,9 +212,10 @@
                         <option value="96">4 jours</option>
                     </select>
 
-                    <button onclick="zoomIn()">Zoom +</button>
-                    <button onclick="zoomOut()">Zoom -</button>
-                    <button onclick="setAutoYScale()">Amplitude auto</button>
+                    <button onclick="zoomIn()">Zoom X +</button>
+                    <button onclick="zoomOut()">Zoom X -</button>
+                    <button onclick="zoomYIn()">Zoom Y +</button>
+                    <button onclick="zoomYOut()">Zoom Y -</button>
                     <button onclick="resetZoom()">Réinitialiser zoom</button>
                 </div>
 
@@ -489,34 +491,41 @@ function createChart(data) {
     });
 }
 
-function setAutoYScale() {
-    if (!compChart || currentCompData.length === 0) return;
-
-    const values = currentCompData
-        .filter(d => d.amplitude !== null && d.amplitude !== undefined && !isNaN(Number(d.amplitude)))
-        .map(d => Number(d.amplitude));
-
-    const bounds = getSuggestedYBounds(values, 5);
-
-    compChart.options.scales.y.min = bounds.min;
-    compChart.options.scales.y.max = bounds.max;
-    compChart.update();
-}
-
 function zoomIn() {
     if (!compChart) return;
-    compChart.zoom(1.2);
+    compChart.zoom({ x: 1.2 });
 }
 
 function zoomOut() {
     if (!compChart) return;
-    compChart.zoom(0.8);
+    compChart.zoom({ x: 0.8 });
+}
+
+function zoomYIn() {
+    if (!compChart) return;
+    const yScale = compChart.options.scales.y;
+    const center = (yScale.min + yScale.max) / 2;
+    const halfRange = (yScale.max - yScale.min) / 2;
+    const newHalf = halfRange * 0.7;
+    yScale.min = Math.round((center - newHalf) * 100) / 100;
+    yScale.max = Math.round((center + newHalf) * 100) / 100;
+    compChart.update();
+}
+
+function zoomYOut() {
+    if (!compChart) return;
+    const yScale = compChart.options.scales.y;
+    const center = (yScale.min + yScale.max) / 2;
+    const halfRange = (yScale.max - yScale.min) / 2;
+    const newHalf = halfRange * 1.4;
+    yScale.min = Math.round((center - newHalf) * 100) / 100;
+    yScale.max = Math.round((center + newHalf) * 100) / 100;
+    compChart.update();
 }
 
 function resetZoom() {
     if (!compChart) return;
     compChart.resetZoom();
-    setAutoYScale();
 }
 
 async function loadChart() {
