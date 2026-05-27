@@ -183,7 +183,15 @@
             margin-top: 1rem;
         }
         @media (max-width: 600px) {
-            .dl-card { flex: 0 0 calc(100% - 0px); }
+            .dl-card {
+                flex: 0 0 100%;
+                padding: 1rem 1.1rem;
+            }
+            .dl-stat-value { font-size: 15px; }
+            .dl-stat-label { font-size: 10px; }
+            .dl-filename   { font-size: 13px; }
+            .dl-badge      { font-size: 10px; }
+            .dl-bar-label  { font-size: 11px; }
         }
     </style>
 </head>
@@ -360,13 +368,28 @@
             `;
         }
 
+        function getVisibleCount() {
+            // 1 carte sur mobile (≤ 600px), 2 sur desktop
+            return window.innerWidth <= 600 ? 1 : VISIBLE;
+        }
+
         function renderSlider() {
-            const track = document.getElementById('dl-track');
+            const visible = getVisibleCount();
+            const track   = document.getElementById('dl-track');
             track.innerHTML = allDays.map(d => buildCard(d)).join('');
 
-            const maxOffset = Math.max(0, allDays.length - VISIBLE);
-            const cardW     = (track.parentElement.offsetWidth - 20) / 2;
-            const shift     = offset * (cardW + 20);
+            const maxOffset = Math.max(0, allDays.length - visible);
+
+            // Clamp l'offset si on passe de desktop à mobile
+            if (offset > maxOffset) offset = maxOffset;
+
+            // Calcule le décalage à partir de la largeur réelle d'une carte
+            const cards = track.querySelectorAll('.dl-card');
+            let shift = 0;
+            if (cards.length > 0) {
+                const cardW = cards[0].getBoundingClientRect().width;
+                shift = offset * (cardW + 20);
+            }
             track.style.transform = `translateX(-${shift}px)`;
 
             document.getElementById('btn-prev').disabled = offset <= 0;
@@ -384,7 +407,7 @@
         }
 
         function slideDir(dir) {
-            const maxOffset = Math.max(0, allDays.length - VISIBLE);
+            const maxOffset = Math.max(0, allDays.length - getVisibleCount());
             offset = Math.max(0, Math.min(maxOffset, offset + dir));
             renderSlider();
         }
@@ -436,7 +459,7 @@
                 };
             });
 
-            offset = Math.max(0, allDays.length - VISIBLE);
+            offset = Math.max(0, allDays.length - getVisibleCount());
             renderSlider();
 
             document.getElementById('last-update').textContent =
@@ -444,6 +467,9 @@
         }
 
         loadData();
+
+        // Recalcule le slider si la fenêtre est redimensionnée (rotation écran, etc.)
+        window.addEventListener('resize', () => renderSlider());
     </script>
 
     <script>
