@@ -66,7 +66,7 @@
     "etat_gf": {
       "expected": [1],
       "unit": "state",
-      "enabled": true,
+      "enabled": false,
       "label": "Etat groupe froid",
       "message_expected": "Alerte groupe froid arrete ou etat incorrect. La valeur attendue est 1."
     }
