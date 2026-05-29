@@ -116,49 +116,60 @@ async function loadSeuils() {
 
     } catch (e) {
         console.error(e);
-        container.innerHTML = `<div class="error-box">Erreur chargement JSON</div>`;
+        container.innerHTML = `<div class="error-box">Erreur chargement JSON : ${e.message}</div>`;
     }
 }
 
 function renderRange(cfg) {
     if (cfg.unit === "state") {
-        const expected = cfg.expected ?? 1;
+        const expected = Array.isArray(cfg.expected) ? cfg.expected[0] : (cfg.expected ?? 1);
         const bad = expected === 1 ? 0 : 1;
-
-        return `
-            Valeur attendue : ${expected}<br>
-            Alerte si valeur = ${bad}
-        `;
+        return `Valeur attendue : ${expected} | Alerte si valeur = ${bad}`;
     }
 
-    return `
-        Min : ${cfg.min ?? "--"} ${cfg.unit || ""} 
-        | 
-        Max : ${cfg.max ?? "--"} ${cfg.unit || ""}
-    `;
+    return `Min : ${cfg.min ?? "--"} ${cfg.unit || ""} | Max : ${cfg.max ?? "--"} ${cfg.unit || ""}`;
+}
+
+function isValidSensor(cfg) {
+    // On ignore les entrées sans label ou sans structure de capteur
+    return cfg && typeof cfg === "object" && cfg.label !== undefined;
 }
 
 function renderSeuils(seuils) {
     let html = `<div class="alert-grid">`;
 
     for (const device in seuils) {
-        html += `<div class="card alert-card"><h2>${device}</h2>`;
+        // On ignore le bloc watchdog qui n'est pas un capteur
+        if (device === "watchdog") continue;
 
-        for (const key in seuils[device]) {
-            const cfg = seuils[device][key];
+        const deviceData = seuils[device];
+        let itemsHtml = "";
 
-            html += `
+        for (const key in deviceData) {
+            const cfg = deviceData[key];
+
+            // On ignore les entrées sans structure valide
+            if (!isValidSensor(cfg)) continue;
+
+            itemsHtml += `
                 <div class="alert-item">
-                    <div class="alert-label">${cfg.label || key}</div>
+                    <div class="alert-label">${cfg.label}</div>
                     <div class="alert-range">${renderRange(cfg)}</div>
                     <div class="${cfg.enabled ? "alert-enabled" : "alert-disabled"}">
-                        ${cfg.enabled ? "Activée" : "Désactivée"}
+                        ${cfg.enabled ? "✔ Activée" : "✘ Désactivée"}
                     </div>
                 </div>
             `;
         }
 
-        html += `</div>`;
+        if (itemsHtml) {
+            html += `
+                <div class="card alert-card">
+                    <h2>${device}</h2>
+                    ${itemsHtml}
+                </div>
+            `;
+        }
     }
 
     html += `</div>`;
