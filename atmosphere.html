@@ -497,7 +497,7 @@ async function loadPressureChart() {
     atmoPressChart = createChart("atmo_press_chart", data, "Pression (hPa)", "pressure", "#ef4444", "rgba(239,68,68,0.1)");
 }
 
-// ── range selectors ───────────────────────────────────────────────────────────
+// ── range selectors -───────────────────────────────────────────────────────────
 
 document.getElementById("temp_range_select").addEventListener("change", async function () {
     currentTempRangeHours = Number(this.value);
