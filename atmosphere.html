@@ -64,6 +64,18 @@ canvas {
     color: #94a3b8;
     font-size: 0.92rem;
 }
+
+.chart-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+}
+
+.chart-section:first-of-type {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
 </style>
 </head>
 
@@ -171,28 +183,66 @@ canvas {
         <div class="value" id="atmo_press">Pression : --</div>
         <div class="timestamp" id="atmo_time"></div>
 
-        <div class="chart-controls">
-            <label for="temp_range_select">Plage température :</label>
-            <select id="temp_range_select">
-                <option value="24">24 h</option>
-                <option value="48">48 h</option>
-                <option value="72">3 jours</option>
-                <option value="96">4 jours</option>
-            </select>
-            <button onclick="zoomIn()">Zoom X +</button>
-            <button onclick="zoomOut()">Zoom X -</button>
-            <button onclick="zoomYIn()">Zoom Y +</button>
-            <button onclick="zoomYOut()">Zoom Y -</button>
-            <button onclick="resetZoom()">Réinitialiser zoom</button>
+        <!-- ── Température ── -->
+        <div class="chart-section">
+            <div class="chart-controls">
+                <label for="temp_range_select">Plage température :</label>
+                <select id="temp_range_select">
+                    <option value="24">24 h</option>
+                    <option value="48">48 h</option>
+                    <option value="72">3 jours</option>
+                    <option value="96">4 jours</option>
+                </select>
+                <button onclick="zoomIn('temp')">Zoom X +</button>
+                <button onclick="zoomOut('temp')">Zoom X -</button>
+                <button onclick="zoomYIn('temp')">Zoom Y +</button>
+                <button onclick="zoomYOut('temp')">Zoom Y -</button>
+                <button onclick="resetZoom('temp')">Réinitialiser zoom</button>
+            </div>
+            <div class="info-note">Clic maintenu + déplacement = navigation dans le graphe température</div>
+            <canvas id="atmo_chart" height="120"></canvas>
         </div>
 
-        <div class="info-note">
-            Clic maintenu + déplacement = navigation dans le graphe température
+        <!-- ── Humidité ── -->
+        <div class="chart-section">
+            <div class="chart-controls">
+                <label for="hum_range_select">Plage humidité :</label>
+                <select id="hum_range_select">
+                    <option value="24">24 h</option>
+                    <option value="48">48 h</option>
+                    <option value="72">3 jours</option>
+                    <option value="96">4 jours</option>
+                </select>
+                <button onclick="zoomIn('hum')">Zoom X +</button>
+                <button onclick="zoomOut('hum')">Zoom X -</button>
+                <button onclick="zoomYIn('hum')">Zoom Y +</button>
+                <button onclick="zoomYOut('hum')">Zoom Y -</button>
+                <button onclick="resetZoom('hum')">Réinitialiser zoom</button>
+            </div>
+            <div class="info-note">Clic maintenu + déplacement = navigation dans le graphe humidité</div>
+            <canvas id="atmo_hum_chart" height="120"></canvas>
         </div>
 
-        <canvas id="atmo_chart" height="120"></canvas>
-        <canvas id="atmo_hum_chart" height="120"></canvas>
-        <canvas id="atmo_press_chart" height="120"></canvas>
+        <!-- ── Pression ── -->
+        <div class="chart-section">
+            <div class="chart-controls">
+                <label for="press_range_select">Plage pression :</label>
+                <select id="press_range_select">
+                    <option value="24">24 h</option>
+                    <option value="48">48 h</option>
+                    <option value="72">3 jours</option>
+                    <option value="96">4 jours</option>
+                </select>
+                <button onclick="zoomIn('press')">Zoom X +</button>
+                <button onclick="zoomOut('press')">Zoom X -</button>
+                <button onclick="zoomYIn('press')">Zoom Y +</button>
+                <button onclick="zoomYOut('press')">Zoom Y -</button>
+                <button onclick="resetZoom('press')">Réinitialiser zoom</button>
+            </div>
+            <div class="info-note">Clic maintenu + déplacement = navigation dans le graphe pression</div>
+            <canvas id="atmo_press_chart" height="120"></canvas>
+        </div>
+
     </div>
 
 </div>
@@ -208,195 +258,131 @@ const SUPABASE_KEY = "sb_publishable_87i8-j5iiLISsoBSBvC7ng_RlE5TPrr";
 let atmoChart;
 let atmoHumChart;
 let atmoPressChart;
-let currentTempRangeHours = 24;
-let currentTempData = [];
+
+let currentTempRangeHours  = 24;
+let currentHumRangeHours   = 24;
+let currentPressRangeHours = 24;
+
+let currentTempData  = [];
+let currentHumData   = [];
+let currentPressData = [];
+
+// ── helpers ──────────────────────────────────────────────────────────────────
 
 function formatLocalTime(utcString) {
     const date = new Date(utcString);
-
     const options = {
         timeZone: "Europe/Paris",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", hour12: false
     };
-
     const parts = new Intl.DateTimeFormat("fr-FR", options).formatToParts(date);
-
-    const year = parts.find(p => p.type === "year").value;
-    const month = parts.find(p => p.type === "month").value;
-    const day = parts.find(p => p.type === "day").value;
-    const hour = parts.find(p => p.type === "hour").value;
+    const year   = parts.find(p => p.type === "year").value;
+    const month  = parts.find(p => p.type === "month").value;
+    const day    = parts.find(p => p.type === "day").value;
+    const hour   = parts.find(p => p.type === "hour").value;
     const minute = parts.find(p => p.type === "minute").value;
-
     return `${year}-${month}-${day} à ${hour}:${minute}`;
 }
 
 function updateStatus(badgeId, timestamp) {
-    const now = new Date();
-    const last = new Date(timestamp);
-    const diffMinutes = (now - last) / 1000 / 60;
-
-    const badge = document.getElementById(badgeId);
-
-    if (diffMinutes <= 2) {
-        badge.style.color = "#22c55e";
-    } else {
-        badge.style.color = "#ef4444";
-    }
+    const diffMinutes = (new Date() - new Date(timestamp)) / 1000 / 60;
+    document.getElementById(badgeId).style.color = diffMinutes <= 2 ? "#22c55e" : "#ef4444";
 }
 
 async function fetchLatest(device) {
-    const response = await fetch(
+    const res = await fetch(
         `${SUPABASE_URL}/rest/v1/measurements?device_id=eq.${device}&order=timestamp.desc&limit=1`,
-        {
-            headers: {
-                "apikey": SUPABASE_KEY,
-                "Authorization": `Bearer ${SUPABASE_KEY}`
-            }
-        }
+        { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` } }
     );
-
-    const data = await response.json();
+    const data = await res.json();
     return data[0];
 }
 
 async function fetchRange(device, hours) {
-    const startDate = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
-
-    const response = await fetch(
+    const startDate = new Date(Date.now() - hours * 3600 * 1000).toISOString();
+    const res = await fetch(
         `${SUPABASE_URL}/rest/v1/measurements?device_id=eq.${device}&timestamp=gte.${startDate}&order=timestamp.asc&limit=6000`,
-        {
-            headers: {
-                "apikey": SUPABASE_KEY,
-                "Authorization": `Bearer ${SUPABASE_KEY}`
-            }
-        }
+        { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` } }
     );
-
-    return await response.json();
+    return await res.json();
 }
 
-function buildLabels(data, hours) {
-    return data.map(d => {
-        const date = new Date(d.timestamp);
-
-        return date.toLocaleString("fr-FR", {
+function buildLabels(data) {
+    return data.map(d =>
+        new Date(d.timestamp).toLocaleString("fr-FR", {
             timeZone: "Europe/Paris",
-            day: "2-digit",
-            month: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false
-        });
-    });
+            day: "2-digit", month: "2-digit",
+            hour: "2-digit", minute: "2-digit", hour12: false
+        })
+    );
 }
 
 function getSuggestedYBounds(values, padding = 0.25) {
-    if (!values || values.length === 0) {
-        return { min: 0, max: 10 };
-    }
-
+    if (!values || values.length === 0) return { min: 0, max: 10 };
     const minVal = Math.min(...values);
     const maxVal = Math.max(...values);
-
     let min = Math.floor((minVal - padding) * 10) / 10;
-    let max = Math.ceil((maxVal + padding) * 10) / 10;
-
-    if (min === max) {
-        min -= 0.5;
-        max += 0.5;
-    }
-
+    let max = Math.ceil ((maxVal + padding) * 10) / 10;
+    if (min === max) { min -= 0.5; max += 0.5; }
     return { min, max };
 }
 
-function createChart(canvasId, data, label, field, borderColor, backgroundColor, hours = 24, zoomable = false) {
-    const ctx = document.getElementById(canvasId).getContext("2d");
-
-    const labels = buildLabels(data, hours);
+function createChart(canvasId, data, label, field, borderColor, backgroundColor) {
+    const ctx    = document.getElementById(canvasId).getContext("2d");
+    const labels = buildLabels(data);
     const values = data.map(d => d[field]);
     const bounds = getSuggestedYBounds(values, field === "pressure" ? 0.5 : 0.25);
 
     return new Chart(ctx, {
         type: "line",
         data: {
-            labels: labels,
+            labels,
             datasets: [{
-                label: label,
+                label,
                 data: values,
-                borderColor: borderColor,
-                backgroundColor: backgroundColor,
+                borderColor,
+                backgroundColor,
                 tension: 0.3,
                 fill: true,
-                pointRadius: zoomable ? 0 : 0,
+                pointRadius: 0,
                 pointHoverRadius: 4
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            interaction: {
-                mode: "nearest",
-                intersect: false
-            },
+            interaction: { mode: "nearest", intersect: false },
             scales: {
                 x: {
-                    ticks: {
-                        color: "#94a3b8",
-                        maxRotation: 0,
-                        autoSkip: true,
-                        maxTicksLimit: 10
-                    },
-                    grid: {
-                        color: "rgba(148, 163, 184, 0.15)"
-                    }
+                    ticks: { color: "#94a3b8", maxRotation: 0, autoSkip: true, maxTicksLimit: 10 },
+                    grid:  { color: "rgba(148, 163, 184, 0.15)" }
                 },
                 y: {
                     min: bounds.min,
                     max: bounds.max,
-                    ticks: {
-                        color: "#94a3b8"
-                    },
-                    grid: {
-                        color: "rgba(148, 163, 184, 0.15)"
-                    }
+                    ticks: { color: "#94a3b8" },
+                    grid:  { color: "rgba(148, 163, 184, 0.15)" }
                 }
             },
             plugins: {
-                legend: {
-                    labels: {
-                        color: "#e2e8f0"
+                legend: { labels: { color: "#e2e8f0" } },
+                zoom: {
+                    pan:  { enabled: true, mode: "xy" },
+                    zoom: {
+                        wheel: { enabled: false },
+                        pinch: { enabled: false },
+                        drag:  { enabled: false },
+                        mode:  "xy"
                     }
                 },
-                zoom: zoomable ? {
-                    pan: {
-                        enabled: true,
-                        mode: "xy"
-                    },
-                    zoom: {
-                        wheel: {
-                            enabled: false
-                        },
-                        pinch: {
-                            enabled: false
-                        },
-                        drag: {
-                            enabled: false
-                        },
-                        mode: "xy"
-                    }
-                } : undefined,
                 tooltip: {
                     callbacks: {
                         label: function(context) {
                             let unit = "";
                             if (field === "temperature") unit = " °C";
-                            if (field === "humidity") unit = " %";
-                            if (field === "pressure") unit = " hPa";
+                            if (field === "humidity")    unit = " %";
+                            if (field === "pressure")   unit = " hPa";
                             return ` ${context.dataset.label} : ${context.parsed.y.toFixed(2)}${unit}`;
                         }
                     }
@@ -406,145 +392,152 @@ function createChart(canvasId, data, label, field, borderColor, backgroundColor,
     });
 }
 
-function setAutoYScale() {
-    if (!atmoChart || currentTempData.length === 0) return;
+// ── zoom controls (shared) ────────────────────────────────────────────────────
 
-    const values = currentTempData.map(d => d.temperature);
-    const bounds = getSuggestedYBounds(values, 0.25);
-
-    atmoChart.options.scales.y.min = bounds.min;
-    atmoChart.options.scales.y.max = bounds.max;
-    atmoChart.update();
+function getChart(key) {
+    if (key === "temp")  return atmoChart;
+    if (key === "hum")   return atmoHumChart;
+    if (key === "press") return atmoPressChart;
 }
 
-function zoomIn() {
-    if (!atmoChart) return;
-    atmoChart.zoom({ x: 1.2 });
+function getData(key) {
+    if (key === "temp")  return currentTempData;
+    if (key === "hum")   return currentHumData;
+    if (key === "press") return currentPressData;
 }
 
-function zoomOut() {
-    if (!atmoChart) return;
-    atmoChart.zoom({ x: 0.8 });
+function getField(key) {
+    if (key === "temp")  return "temperature";
+    if (key === "hum")   return "humidity";
+    if (key === "press") return "pressure";
 }
 
-function zoomYIn() {
-    if (!atmoChart) return;
-    const yScale = atmoChart.options.scales.y;
-    const center = (yScale.min + yScale.max) / 2;
-    const halfRange = (yScale.max - yScale.min) / 2;
-    const newHalf = halfRange * 0.7;
+function setAutoYScale(key) {
+    const chart = getChart(key);
+    const data  = getData(key);
+    if (!chart || data.length === 0) return;
+    const field  = getField(key);
+    const values = data.map(d => d[field]);
+    const bounds = getSuggestedYBounds(values, field === "pressure" ? 0.5 : 0.25);
+    chart.options.scales.y.min = bounds.min;
+    chart.options.scales.y.max = bounds.max;
+    chart.update();
+}
+
+function zoomIn(key) {
+    const chart = getChart(key);
+    if (chart) chart.zoom({ x: 1.2 });
+}
+
+function zoomOut(key) {
+    const chart = getChart(key);
+    if (chart) chart.zoom({ x: 0.8 });
+}
+
+function zoomYIn(key) {
+    const chart = getChart(key);
+    if (!chart) return;
+    const yScale   = chart.options.scales.y;
+    const center   = (yScale.min + yScale.max) / 2;
+    const newHalf  = ((yScale.max - yScale.min) / 2) * 0.7;
     yScale.min = Math.round((center - newHalf) * 100) / 100;
     yScale.max = Math.round((center + newHalf) * 100) / 100;
-    atmoChart.update();
+    chart.update();
 }
 
-function zoomYOut() {
-    if (!atmoChart) return;
-    const yScale = atmoChart.options.scales.y;
-    const center = (yScale.min + yScale.max) / 2;
-    const halfRange = (yScale.max - yScale.min) / 2;
-    const newHalf = halfRange * 1.4;
+function zoomYOut(key) {
+    const chart = getChart(key);
+    if (!chart) return;
+    const yScale   = chart.options.scales.y;
+    const center   = (yScale.min + yScale.max) / 2;
+    const newHalf  = ((yScale.max - yScale.min) / 2) * 1.4;
     yScale.min = Math.round((center - newHalf) * 100) / 100;
     yScale.max = Math.round((center + newHalf) * 100) / 100;
-    atmoChart.update();
+    chart.update();
 }
 
-function resetZoom() {
-    if (!atmoChart) return;
-    atmoChart.resetZoom();
-    setAutoYScale();
+function resetZoom(key) {
+    const chart = getChart(key);
+    if (!chart) return;
+    chart.resetZoom();
+    setAutoYScale(key);
 }
+
+// ── data loading ──────────────────────────────────────────────────────────────
 
 async function refreshValues() {
     const atmo = await fetchLatest("arduino_atmo");
-
     if (atmo) {
-        document.getElementById("atmo_temp").textContent =
-            "Température : " + Number(atmo.temperature).toFixed(1) + " °C";
-        document.getElementById("atmo_hum").textContent =
-            "Humidité : " + Number(atmo.humidity).toFixed(1) + " %";
-        document.getElementById("atmo_press").textContent =
-            "Pression : " + Number(atmo.pressure).toFixed(1) + " hPa";
-        document.getElementById("atmo_time").textContent =
-            "Dernière mesure : " + formatLocalTime(atmo.timestamp);
-
+        document.getElementById("atmo_temp").textContent  = "Température : " + Number(atmo.temperature).toFixed(1) + " °C";
+        document.getElementById("atmo_hum").textContent   = "Humidité : "    + Number(atmo.humidity).toFixed(1)    + " %";
+        document.getElementById("atmo_press").textContent = "Pression : "    + Number(atmo.pressure).toFixed(1)    + " hPa";
+        document.getElementById("atmo_time").textContent  = "Dernière mesure : " + formatLocalTime(atmo.timestamp);
         updateStatus("atmo_status", atmo.timestamp);
     }
 }
 
 async function loadTemperatureChart() {
-    const atmoData = await fetchRange("arduino_atmo", currentTempRangeHours);
-    currentTempData = atmoData;
-
+    const data = await fetchRange("arduino_atmo", currentTempRangeHours);
+    currentTempData = data;
     if (atmoChart) atmoChart.destroy();
-
-    atmoChart = createChart(
-        "atmo_chart",
-        atmoData,
-        "Température (°C)",
-        "temperature",
-        "#3b82f6",
-        "rgba(59,130,246,0.1)",
-        currentTempRangeHours,
-        true
-    );
+    atmoChart = createChart("atmo_chart", data, "Température (°C)", "temperature", "#3b82f6", "rgba(59,130,246,0.1)");
 }
 
-async function loadFixedCharts() {
-    const atmoData = await fetchRange("arduino_atmo", 24);
-
+async function loadHumidityChart() {
+    const data = await fetchRange("arduino_atmo", currentHumRangeHours);
+    currentHumData = data;
     if (atmoHumChart) atmoHumChart.destroy();
-    if (atmoPressChart) atmoPressChart.destroy();
-
-    atmoHumChart = createChart(
-        "atmo_hum_chart",
-        atmoData,
-        "Humidité (%)",
-        "humidity",
-        "#22c55e",
-        "rgba(34,197,94,0.1)",
-        24,
-        false
-    );
-
-    atmoPressChart = createChart(
-        "atmo_press_chart",
-        atmoData,
-        "Pression (hPa)",
-        "pressure",
-        "#ef4444",
-        "rgba(239,68,68,0.1)",
-        24,
-        false
-    );
+    atmoHumChart = createChart("atmo_hum_chart", data, "Humidité (%)", "humidity", "#22c55e", "rgba(34,197,94,0.1)");
 }
+
+async function loadPressureChart() {
+    const data = await fetchRange("arduino_atmo", currentPressRangeHours);
+    currentPressData = data;
+    if (atmoPressChart) atmoPressChart.destroy();
+    atmoPressChart = createChart("atmo_press_chart", data, "Pression (hPa)", "pressure", "#ef4444", "rgba(239,68,68,0.1)");
+}
+
+// ── range selectors ───────────────────────────────────────────────────────────
 
 document.getElementById("temp_range_select").addEventListener("change", async function () {
     currentTempRangeHours = Number(this.value);
     await loadTemperatureChart();
 });
 
+document.getElementById("hum_range_select").addEventListener("change", async function () {
+    currentHumRangeHours = Number(this.value);
+    await loadHumidityChart();
+});
+
+document.getElementById("press_range_select").addEventListener("change", async function () {
+    currentPressRangeHours = Number(this.value);
+    await loadPressureChart();
+});
+
+// ── init & polling ────────────────────────────────────────────────────────────
+
 async function initPage() {
     await refreshValues();
     await loadTemperatureChart();
-    await loadFixedCharts();
+    await loadHumidityChart();
+    await loadPressureChart();
 }
 
 initPage();
 
 setInterval(refreshValues, 30000);
+
 setInterval(async () => {
-    if (currentTempRangeHours === 24) {
-        await loadTemperatureChart();
-    }
-    await loadFixedCharts();
+    if (currentTempRangeHours  === 24) await loadTemperatureChart();
+    if (currentHumRangeHours   === 24) await loadHumidityChart();
+    if (currentPressRangeHours === 24) await loadPressureChart();
 }, 300000);
 </script>
 
 <script>
 function toggleMenu() {
     const sidebar = document.getElementById("sidebar");
-    const main = document.querySelector(".main-content");
+    const main    = document.querySelector(".main-content");
     const overlay = document.getElementById("overlay");
     if (!sidebar || !main || !overlay) return;
     if (window.innerWidth <= 720) {
