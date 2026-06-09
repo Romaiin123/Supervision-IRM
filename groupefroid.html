@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Données Groupe Froid</title>
+<title>Groupe Froid CTA</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=final">
 
 <style>
-.card { position: relative; text-align: center; }
+.card { position: relative; }
 
 .status-badge {
     position: absolute;
@@ -18,100 +18,93 @@
     font-size: 1.4rem;
 }
 
-.voyant {
-    width: 140px;
-    height: 140px;
-    border-radius: 50%;
-    margin: 40px auto;
-    background: gray;
-    transition: all 0.3s ease;
-}
-
-.on {
-    background: #22c55e;
-    box-shadow: 0 0 40px rgba(34,197,94,0.8);
-}
-
-.off {
-    background: #ef4444;
-    box-shadow: 0 0 40px rgba(239,68,68,0.8);
-}
-
-.state-text {
-    font-size: 1.6rem;
+.section-title {
+    font-size: 1.1rem;
     font-weight: 600;
-    margin-bottom: 10px;
+    color: var(--muted);
+    margin: 0 0 14px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.dual-row {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.state-btn {
+    flex: 1;
+    padding: 18px 10px;
+    border-radius: 14px;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    cursor: default;
+    transition: background 0.3s;
+}
+
+.state-btn.green  { background: #22c55e; }
+.state-btn.red    { background: #ef4444; }
+.state-btn.gray   { background: #9ca3af; }
+
+.btn-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 5px;
+}
+
+.tension-btn {
+    width: 100%;
+    padding: 22px;
+    border-radius: 14px;
+    border: none;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: white;
+    cursor: default;
+    margin-top: 6px;
+}
+
+.timestamp {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 12px;
 }
 </style>
 </head>
 
 <body>
 
-<button class="menu-toggle" type="button" aria-label="Ouvrir le menu" onclick="toggleMenu()">
-    ☰
-</button>
-
+<button class="menu-toggle" type="button" aria-label="Ouvrir le menu" onclick="toggleMenu()">☰</button>
 <div id="overlay" onclick="closeMenu()"></div>
 
 <div class="app-shell">
 
     <aside id="sidebar" class="sidebar">
-
         <div class="sidebar-brand">
             <span>IRM Supervision</span>
             <img src="Logo_IRM.png" alt="Logo IRM">
         </div>
 
         <div class="sidebar-section">
-            <div class="sidebar-title">
-                <span>Monitoring</span>
-                <span>⌄</span>
-            </div>
-
+            <div class="sidebar-title"><span>Monitoring</span><span>⌄</span></div>
             <nav class="sidebar-menu">
-                <a href="index.html" data-page="index">
-                    <span class="dot"></span>
-                    <span class="label-text">Vue générale</span>
-                </a>
-
-                <a href="atmosphere.html" data-page="atmosphere">
-                    <span class="dot"></span>
-                    <span class="label-text">Atmosphère</span>
-                </a>
-
-                <a href="eaufroide.html" data-page="eaufroide">
-                    <span class="dot"></span>
-                    <span class="label-text">Eau glacée</span>
-                </a>
-
-                <a href="compresseur.html" data-page="compresseur">
-                    <span class="dot"></span>
-                    <span class="label-text">Compresseur</span>
-                </a>
-
-                <a href="groupefroid.html" data-page="groupefroid">
-                    <span class="dot"></span>
-                    <span class="label-text">Groupe froid</span>
-                </a>
+                <a href="index.html" data-page="index"><span class="dot"></span><span class="label-text">Vue générale</span></a>
+                <a href="atmosphere.html" data-page="atmosphere"><span class="dot"></span><span class="label-text">Atmosphère</span></a>
+                <a href="eaufroide.html" data-page="eaufroide"><span class="dot"></span><span class="label-text">Eau glacée</span></a>
+                <a href="compresseur.html" data-page="compresseur"><span class="dot"></span><span class="label-text">Compresseur</span></a>
+                <a href="groupefroid.html" data-page="groupefroid"><span class="dot"></span><span class="label-text">Groupe froid</span></a>
             </nav>
         </div>
 
         <div class="sidebar-section">
-            <div class="sidebar-title">
-                <span>Système</span>
-                <span>⌄</span>
-            </div>
-
+            <div class="sidebar-title"><span>Système</span><span>⌄</span></div>
             <nav class="sidebar-menu">
-               <a href="alerte.html" data-page="alerte">
-                <span class="dot"></span>
-                <span class="label-text">Alertes</span>
-                </a>
-
-                <a href="datalogging.html" data-page="datalogging">
-                    <span class="dot"></span>
-                    <span class="label-text">Datalogging</span>
-                </a>
+                <a href="alerte.html" data-page="alerte"><span class="dot"></span><span class="label-text">Alertes</span></a>
+                <a href="datalogging.html" data-page="datalogging"><span class="dot"></span><span class="label-text">Datalogging</span></a>
             </nav>
         </div>
 
@@ -119,120 +112,153 @@
             Plateforme IRM – INT<br>
             Consultation distante
         </div>
-
     </aside>
 
     <main class="main-content">
 
         <div class="topbar">
             <div>
-                <h1 class="page-title">Données atmosphériques</h1>
-                <div class="page-subtitle">
-                    Température, humidité et pression de la salle IRM
-                </div>
+                <h1 class="page-title">Groupe Froid CTA</h1>
+                <div class="page-subtitle">État des groupes froids, défauts et tension armoire</div>
             </div>
-
             <div class="topbar-actions">
                 <span class="badge-soft">Supabase REST</span>
                 <span class="badge-soft">Lecture seule</span>
             </div>
         </div>
 
-        <div class="container">
+        <div class="container" style="display:grid; grid-template-columns: repeat(3,1fr); gap:20px;">
 
-    <div class="card">
-        <h2>Arduino Groupe Froid</h2>
-        <div id="gf_status" class="status-badge">●</div>
+            <!-- ── Groupe Froid 1 ── -->
+            <div class="card">
+                <div id="gf1_status" class="status-badge">●</div>
+                <h2 style="margin-top:0">Groupe Froid 1</h2>
 
-        <div id="voyant" class="voyant"></div>
+                <div class="dual-row">
+                    <div style="flex:1">
+                        <button id="gf1_marche" class="state-btn gray">--</button>
+                        <div class="btn-label">Marche</div>
+                    </div>
+                    <div style="flex:1">
+                        <button id="gf1_defaut" class="state-btn gray">--</button>
+                        <div class="btn-label">Défaut</div>
+                    </div>
+                </div>
 
-        <div id="gf_state" class="state-text">État : --</div>
-        <div class="timestamp" id="gf_time"></div>
-    </div>
+                <div class="timestamp" id="gf1_time"></div>
+            </div>
 
+            <!-- ── Groupe Froid 2 ── -->
+            <div class="card">
+                <div id="gf2_status" class="status-badge">●</div>
+                <h2 style="margin-top:0">Groupe Froid 2</h2>
+
+                <div class="dual-row">
+                    <div style="flex:1">
+                        <button id="gf2_marche" class="state-btn gray">--</button>
+                        <div class="btn-label">Marche</div>
+                    </div>
+                    <div style="flex:1">
+                        <button id="gf2_defaut" class="state-btn gray">--</button>
+                        <div class="btn-label">Défaut</div>
+                    </div>
+                </div>
+
+                <div class="timestamp" id="gf2_time"></div>
+            </div>
+
+            <!-- ── Tension Armoire ── -->
+            <div class="card">
+                <div id="tension_status" class="status-badge">●</div>
+                <h2 style="margin-top:0">Tension Armoire CTA</h2>
+
+                <button id="tension_btn" class="tension-btn" style="background:#9ca3af">--</button>
+
+                <div class="timestamp" id="tension_time"></div>
+            </div>
+
+        </div>
+    </main>
 </div>
 
-</main>
-</div>
 <script>document.querySelector('[data-page="groupefroid"]').classList.add('active');</script>
 
 <script>
-
 const SUPABASE_URL = "https://xkqizqpflgcmyiqluuie.supabase.co";
 const SUPABASE_KEY = "sb_publishable_87i8-j5iiLISsoBSBvC7ng_RlE5TPrr";
 
 function formatLocalTime(utcString) {
-    const date = new Date(utcString);
-
-    return date.toLocaleString("fr-FR", {
+    return new Date(utcString).toLocaleString("fr-FR", {
         timeZone: "Europe/Paris",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", hour12: false
     });
 }
 
-function updateStatus(badgeId, timestamp) {
+function updateStatusBadge(badgeId, timestamp) {
+    const diffMinutes = (new Date() - new Date(timestamp)) / 60000;
+    document.getElementById(badgeId).style.color = diffMinutes <= 5 ? "#22c55e" : "#ef4444";
+}
 
-    const now = new Date();
-    const last = new Date(timestamp);
-    const diffMinutes = (now - last) / 1000 / 60;
+/* Marche : 1 = vert ON, 0 = gris OFF */
+function setMarche(btnId, value) {
+    const btn = document.getElementById(btnId);
+    if (value === 1)      { btn.className = "state-btn green"; btn.innerText = "ON"; }
+    else if (value === 0) { btn.className = "state-btn gray";  btn.innerText = "OFF"; }
+    else                  { btn.className = "state-btn gray";  btn.innerText = "--"; }
+}
 
-    const badge = document.getElementById(badgeId);
+/* Défaut : 1 = rouge DÉFAUT, 0 = gris OK */
+function setDefaut(btnId, value) {
+    const btn = document.getElementById(btnId);
+    if (value === 1)      { btn.className = "state-btn red";  btn.innerText = "DÉFAUT"; }
+    else if (value === 0) { btn.className = "state-btn gray"; btn.innerText = "OK"; }
+    else                  { btn.className = "state-btn gray"; btn.innerText = "--"; }
+}
 
-    if (diffMinutes <= 2) {
-        badge.style.color = "#22c55e";
-    } else {
-        badge.style.color = "#ef4444";
-    }
+/* Tension : 1 = vert TENSION, 0 = rouge ABSENCE */
+function setTension(btnId, value) {
+    const btn = document.getElementById(btnId);
+    if (value === 1)      { btn.style.background = "#22c55e"; btn.innerText = "TENSION"; }
+    else if (value === 0) { btn.style.background = "#ef4444"; btn.innerText = "ABSENCE"; }
+    else                  { btn.style.background = "#9ca3af"; btn.innerText = "--"; }
 }
 
 async function fetchLatest() {
-
-    const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/measurements?device_id=eq.arduino_groupe_froid&order=timestamp.desc&limit=1`,
-        {
-            headers: {
-                "apikey": SUPABASE_KEY,
-                "Authorization": `Bearer ${SUPABASE_KEY}`
-            }
-        }
+    const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/measurements?device_id=eq.module_cta&order=timestamp.desc&limit=1`,
+        { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` } }
     );
-
-    const data = await response.json();
+    const data = await r.json();
     return data[0];
 }
 
 async function refresh() {
+    const d = await fetchLatest();
+    if (!d) return;
 
-    const data = await fetchLatest();
-    if (!data) return;
+    const ts = formatLocalTime(d.timestamp);
 
-    const voyant = document.getElementById("voyant");
-    const stateText = document.getElementById("gf_state");
+    /* Groupe Froid 1 */
+    setMarche("gf1_marche", d.marche_groupe_froid_1);
+    setDefaut("gf1_defaut", d.defaut_groupe_froid_1);
+    document.getElementById("gf1_time").textContent = "Dernière mesure : " + ts;
+    updateStatusBadge("gf1_status", d.timestamp);
 
-    if (data.etat_gf === 1) {
-        voyant.classList.remove("off");
-        voyant.classList.add("on");
-        stateText.textContent = "État : ON";
-    } else {
-        voyant.classList.remove("on");
-        voyant.classList.add("off");
-        stateText.textContent = "État : OFF";
-    }
+    /* Groupe Froid 2 */
+    setMarche("gf2_marche", d.marche_groupe_froid_2);
+    setDefaut("gf2_defaut", d.defaut_groupe_froid_2);
+    document.getElementById("gf2_time").textContent = "Dernière mesure : " + ts;
+    updateStatusBadge("gf2_status", d.timestamp);
 
-    document.getElementById("gf_time").textContent =
-        "Dernière mesure : " + formatLocalTime(data.timestamp);
-
-    updateStatus("gf_status", data.timestamp);
+    /* Tension armoire */
+    setTension("tension_btn", d.defaut_tension);
+    document.getElementById("tension_time").textContent = "Dernière mesure : " + ts;
+    updateStatusBadge("tension_status", d.timestamp);
 }
 
 refresh();
 setInterval(refresh, 30000);
-
 </script>
 
 <script>
@@ -257,10 +283,9 @@ function closeMenu() {
     overlay.classList.remove("active");
 }
 document.querySelectorAll(".sidebar-menu a").forEach(a => {
-    a.addEventListener("click", () => {
-        if (window.innerWidth <= 720) closeMenu();
-    });
+    a.addEventListener("click", () => { if (window.innerWidth <= 720) closeMenu(); });
 });
 </script>
+
 </body>
 </html>
