@@ -8,70 +8,107 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=final">
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+
 <style>
-.card { position: relative; }
+.card { position: relative; margin-bottom: 20px; }
+
+/* ── Ligne d'états instantanés ── */
+.state-row {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 6px;
+}
+.state-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+.state-col .btn-label {
+    font-size: 0.75rem;
+    color: var(--muted, #94a3b8);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.state-btn {
+    width: 100%;
+    padding: 16px 10px;
+    border-radius: 12px;
+    border: none;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: white;
+    cursor: default;
+    transition: background 0.3s;
+}
+.state-btn.green  { background: #22c55e; }
+.state-btn.red    { background: #ef4444; }
+.state-btn.gray   { background: #9ca3af; }
 
 .status-badge {
     position: absolute;
     top: 20px;
     right: 25px;
     font-size: 1.4rem;
-}
-
-.section-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--muted);
-    margin: 0 0 14px 0;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.dual-row {
-    display: flex;
-    gap: 14px;
-    margin-bottom: 14px;
-}
-
-.state-btn {
-    flex: 1;
-    padding: 18px 10px;
-    border-radius: 14px;
-    border: none;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: white;
-    cursor: default;
-    transition: background 0.3s;
-}
-
-.state-btn.green  { background: #22c55e; }
-.state-btn.red    { background: #ef4444; }
-.state-btn.gray   { background: #9ca3af; }
-
-.btn-label {
-    font-size: 0.75rem;
-    color: var(--muted);
-    text-align: center;
-    margin-top: 5px;
-}
-
-.tension-btn {
-    width: 100%;
-    padding: 22px;
-    border-radius: 14px;
-    border: none;
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: white;
-    cursor: default;
-    margin-top: 6px;
+    color: #9ca3af;
 }
 
 .timestamp {
     font-size: 0.78rem;
-    color: var(--muted);
-    margin-top: 12px;
+    color: var(--muted, #94a3b8);
+    margin: 8px 0 18px 0;
+}
+
+/* ── Contrôles graphe ── */
+.chart-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+.range-btn {
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    font-size: 0.88rem;
+    font-family: inherit;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.15s;
+}
+.range-btn:hover { background: #f1f5f9; }
+.range-btn.active { background: #334155; color: #fff; border-color: #334155; }
+
+.zoom-btn {
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    font-size: 0.88rem;
+    font-family: inherit;
+    cursor: pointer;
+}
+.zoom-btn:hover { background: #f1f5f9; }
+
+.info-note {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    margin-bottom: 6px;
+}
+
+.card h2 {
+    margin: 0 0 16px 0;
+    font-size: 1.1rem;
+    padding-right: 40px;
 }
 </style>
 </head>
@@ -92,9 +129,9 @@
         <div class="sidebar-section">
             <div class="sidebar-title"><span>Monitoring</span><span>⌄</span></div>
             <nav class="sidebar-menu">
-                <a href="index.html" data-page="index"><span class="dot"></span><span class="label-text">Vue générale</span></a>
-                <a href="atmosphere.html" data-page="atmosphere"><span class="dot"></span><span class="label-text">Atmosphère</span></a>
-                <a href="eaufroide.html" data-page="eaufroide"><span class="dot"></span><span class="label-text">Eau glacée</span></a>
+                <a href="index.html"       data-page="index">      <span class="dot"></span><span class="label-text">Vue générale</span></a>
+                <a href="atmosphere.html"  data-page="atmosphere"> <span class="dot"></span><span class="label-text">Atmosphère</span></a>
+                <a href="eaufroide.html"   data-page="eaufroide">  <span class="dot"></span><span class="label-text">Eau glacée</span></a>
                 <a href="compresseur.html" data-page="compresseur"><span class="dot"></span><span class="label-text">Compresseur</span></a>
                 <a href="groupefroid.html" data-page="groupefroid"><span class="dot"></span><span class="label-text">Groupe froid</span></a>
             </nav>
@@ -103,7 +140,7 @@
         <div class="sidebar-section">
             <div class="sidebar-title"><span>Système</span><span>⌄</span></div>
             <nav class="sidebar-menu">
-                <a href="alerte.html" data-page="alerte"><span class="dot"></span><span class="label-text">Alertes</span></a>
+                <a href="alerte.html"     data-page="alerte">     <span class="dot"></span><span class="label-text">Alertes</span></a>
                 <a href="datalogging.html" data-page="datalogging"><span class="dot"></span><span class="label-text">Datalogging</span></a>
             </nav>
         </div>
@@ -119,7 +156,7 @@
         <div class="topbar">
             <div>
                 <h1 class="page-title">Groupe Froid CTA</h1>
-                <div class="page-subtitle">État des groupes froids, défauts et tension armoire</div>
+                <div class="page-subtitle">État des groupes froids, tension armoire et défauts variateur</div>
             </div>
             <div class="topbar-actions">
                 <span class="badge-soft">Supabase REST</span>
@@ -127,54 +164,130 @@
             </div>
         </div>
 
-        <div class="container" style="display:grid; grid-template-columns: repeat(3,1fr); gap:20px;">
+        <div class="container">
 
-            <!-- ── Groupe Froid 1 ── -->
+            <!-- ══════════════════════════════════════════
+                 GROUPE FROID 1
+            ══════════════════════════════════════════ -->
             <div class="card">
-                <div id="gf1_status" class="status-badge">●</div>
-                <h2 style="margin-top:0">Groupe Froid 1</h2>
+                <div id="gf1_badge" class="status-badge">●</div>
+                <h2>Groupe Froid 1</h2>
 
-                <div class="dual-row">
-                    <div style="flex:1">
+                <div class="state-row">
+                    <div class="state-col">
+                        <div class="btn-label">Marche</div>
                         <button id="gf1_marche" class="state-btn gray">--</button>
-                        <div class="btn-label">Marche</div>
                     </div>
-                    <div style="flex:1">
+                    <div class="state-col">
+                        <div class="btn-label">Défaut</div>
                         <button id="gf1_defaut" class="state-btn gray">--</button>
-                        <div class="btn-label">Défaut</div>
                     </div>
                 </div>
-
                 <div class="timestamp" id="gf1_time"></div>
+
+                <div class="chart-controls">
+                    <button class="range-btn active" onclick="setRange('gf1', 24, this)">24 h</button>
+                    <button class="range-btn"        onclick="setRange('gf1', 48, this)">48 h</button>
+                    <button class="range-btn"        onclick="setRange('gf1', 72, this)">3 jours</button>
+                    <button class="range-btn"        onclick="setRange('gf1', 96, this)">4 jours</button>
+                    <button class="zoom-btn"         onclick="zoomChart('gf1', 1.2)">Zoom +</button>
+                    <button class="zoom-btn"         onclick="zoomChart('gf1', 0.8)">Zoom −</button>
+                    <button class="zoom-btn"         onclick="resetChart('gf1')">Réinitialiser</button>
+                </div>
+                <div class="info-note">Clic maintenu + déplacement = navigation dans le graphe</div>
+                <canvas id="gf1_chart" height="100"></canvas>
             </div>
 
-            <!-- ── Groupe Froid 2 ── -->
+            <!-- ══════════════════════════════════════════
+                 GROUPE FROID 2
+            ══════════════════════════════════════════ -->
             <div class="card">
-                <div id="gf2_status" class="status-badge">●</div>
-                <h2 style="margin-top:0">Groupe Froid 2</h2>
+                <div id="gf2_badge" class="status-badge">●</div>
+                <h2>Groupe Froid 2</h2>
 
-                <div class="dual-row">
-                    <div style="flex:1">
-                        <button id="gf2_marche" class="state-btn gray">--</button>
+                <div class="state-row">
+                    <div class="state-col">
                         <div class="btn-label">Marche</div>
+                        <button id="gf2_marche" class="state-btn gray">--</button>
                     </div>
-                    <div style="flex:1">
-                        <button id="gf2_defaut" class="state-btn gray">--</button>
+                    <div class="state-col">
                         <div class="btn-label">Défaut</div>
+                        <button id="gf2_defaut" class="state-btn gray">--</button>
                     </div>
                 </div>
-
                 <div class="timestamp" id="gf2_time"></div>
+
+                <div class="chart-controls">
+                    <button class="range-btn active" onclick="setRange('gf2', 24, this)">24 h</button>
+                    <button class="range-btn"        onclick="setRange('gf2', 48, this)">48 h</button>
+                    <button class="range-btn"        onclick="setRange('gf2', 72, this)">3 jours</button>
+                    <button class="range-btn"        onclick="setRange('gf2', 96, this)">4 jours</button>
+                    <button class="zoom-btn"         onclick="zoomChart('gf2', 1.2)">Zoom +</button>
+                    <button class="zoom-btn"         onclick="zoomChart('gf2', 0.8)">Zoom −</button>
+                    <button class="zoom-btn"         onclick="resetChart('gf2')">Réinitialiser</button>
+                </div>
+                <div class="info-note">Clic maintenu + déplacement = navigation dans le graphe</div>
+                <canvas id="gf2_chart" height="100"></canvas>
             </div>
 
-            <!-- ── Tension Armoire ── -->
+            <!-- ══════════════════════════════════════════
+                 TENSION ARMOIRE + DÉFAUT CTA
+            ══════════════════════════════════════════ -->
             <div class="card">
-                <div id="tension_status" class="status-badge">●</div>
-                <h2 style="margin-top:0">Tension Armoire CTA</h2>
+                <div id="tension_badge" class="status-badge">●</div>
+                <h2>Tension Armoire CTA &amp; Défaut CTA</h2>
 
-                <button id="tension_btn" class="tension-btn" style="background:#9ca3af">--</button>
-
+                <div class="state-row">
+                    <div class="state-col">
+                        <div class="btn-label">Tension armoire</div>
+                        <button id="tension_btn" class="state-btn gray">--</button>
+                    </div>
+                    <div class="state-col">
+                        <div class="btn-label">Défaut CTA</div>
+                        <button id="defaut_cta_btn" class="state-btn gray">--</button>
+                    </div>
+                </div>
                 <div class="timestamp" id="tension_time"></div>
+
+                <div class="chart-controls">
+                    <button class="range-btn active" onclick="setRange('tension', 24, this)">24 h</button>
+                    <button class="range-btn"        onclick="setRange('tension', 48, this)">48 h</button>
+                    <button class="range-btn"        onclick="setRange('tension', 72, this)">3 jours</button>
+                    <button class="range-btn"        onclick="setRange('tension', 96, this)">4 jours</button>
+                    <button class="zoom-btn"         onclick="zoomChart('tension', 1.2)">Zoom +</button>
+                    <button class="zoom-btn"         onclick="zoomChart('tension', 0.8)">Zoom −</button>
+                    <button class="zoom-btn"         onclick="resetChart('tension')">Réinitialiser</button>
+                </div>
+                <div class="info-note">Clic maintenu + déplacement = navigation dans le graphe</div>
+                <canvas id="tension_chart" height="100"></canvas>
+            </div>
+
+            <!-- ══════════════════════════════════════════
+                 DÉFAUT VARIATEUR CTA
+            ══════════════════════════════════════════ -->
+            <div class="card">
+                <div id="variateur_badge" class="status-badge">●</div>
+                <h2>Défaut Variateur CTA</h2>
+
+                <div class="state-row">
+                    <div class="state-col">
+                        <div class="btn-label">Défaut variateur</div>
+                        <button id="variateur_btn" class="state-btn gray">--</button>
+                    </div>
+                </div>
+                <div class="timestamp" id="variateur_time"></div>
+
+                <div class="chart-controls">
+                    <button class="range-btn active" onclick="setRange('variateur', 24, this)">24 h</button>
+                    <button class="range-btn"        onclick="setRange('variateur', 48, this)">48 h</button>
+                    <button class="range-btn"        onclick="setRange('variateur', 72, this)">3 jours</button>
+                    <button class="range-btn"        onclick="setRange('variateur', 96, this)">4 jours</button>
+                    <button class="zoom-btn"         onclick="zoomChart('variateur', 1.2)">Zoom +</button>
+                    <button class="zoom-btn"         onclick="zoomChart('variateur', 0.8)">Zoom −</button>
+                    <button class="zoom-btn"         onclick="resetChart('variateur')">Réinitialiser</button>
+                </div>
+                <div class="info-note">Clic maintenu + déplacement = navigation dans le graphe</div>
+                <canvas id="variateur_chart" height="100"></canvas>
             </div>
 
         </div>
@@ -183,88 +296,309 @@
 
 <script>document.querySelector('[data-page="groupefroid"]').classList.add('active');</script>
 
+<!-- ══════════════════════════════════════════════════════════════
+     LOGIQUE PRINCIPALE
+══════════════════════════════════════════════════════════════ -->
 <script>
 const SUPABASE_URL = "https://xkqizqpflgcmyiqluuie.supabase.co";
 const SUPABASE_KEY = "sb_publishable_87i8-j5iiLISsoBSBvC7ng_RlE5TPrr";
+const DEVICE_ID    = "module_cta";
+const FRESHNESS_MIN = 5;
 
+/* ─── Helpers dates ─── */
 function formatLocalTime(utcString) {
-    return new Date(utcString).toLocaleString("fr-FR", {
+    if (!utcString) return "--";
+    const d = new Date(utcString);
+    if (isNaN(d.getTime())) return "--";
+    return d.toLocaleString("fr-FR", {
         timeZone: "Europe/Paris",
         year: "numeric", month: "2-digit", day: "2-digit",
         hour: "2-digit", minute: "2-digit", hour12: false
     });
 }
 
-function updateStatusBadge(badgeId, timestamp) {
-    const diffMinutes = (new Date() - new Date(timestamp)) / 60000;
-    document.getElementById(badgeId).style.color = diffMinutes <= 5 ? "#22c55e" : "#ef4444";
+function isFresh(ts) {
+    if (!ts) return false;
+    return (Date.now() - new Date(ts).getTime()) / 60000 <= FRESHNESS_MIN;
 }
 
-/* Marche : 1 = vert ON, 0 = gris OFF */
-function setMarche(btnId, value) {
-    const btn = document.getElementById(btnId);
-    if (value === 1)      { btn.className = "state-btn green"; btn.innerText = "ON"; }
-    else if (value === 0) { btn.className = "state-btn gray";  btn.innerText = "OFF"; }
-    else                  { btn.className = "state-btn gray";  btn.innerText = "--"; }
+function setBadge(id, ts) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.color = isFresh(ts) ? "#22c55e" : "#ef4444";
 }
 
-/* Défaut : 1 = rouge DÉFAUT, 0 = gris OK */
-function setDefaut(btnId, value) {
-    const btn = document.getElementById(btnId);
-    if (value === 1)      { btn.className = "state-btn red";  btn.innerText = "DÉFAUT"; }
-    else if (value === 0) { btn.className = "state-btn gray"; btn.innerText = "OK"; }
-    else                  { btn.className = "state-btn gray"; btn.innerText = "--"; }
+/* ─── Helpers boutons d'état ─── */
+/* Marche : 1 = vert ON | 0 = gris OFF */
+function setMarche(id, v) {
+    const b = document.getElementById(id);
+    if (v === 1)      { b.className = "state-btn green"; b.textContent = "ON"; }
+    else if (v === 0) { b.className = "state-btn gray";  b.textContent = "OFF"; }
+    else              { b.className = "state-btn gray";  b.textContent = "--"; }
 }
 
-/* Tension : 1 = vert TENSION, 0 = rouge ABSENCE */
-function setTension(btnId, value) {
-    const btn = document.getElementById(btnId);
-    if (value === 1)      { btn.style.background = "#22c55e"; btn.innerText = "TENSION"; }
-    else if (value === 0) { btn.style.background = "#ef4444"; btn.innerText = "ABSENCE"; }
-    else                  { btn.style.background = "#9ca3af"; btn.innerText = "--"; }
+/* Défaut : 1 = rouge DÉFAUT | 0 = gris OK */
+function setDefaut(id, v) {
+    const b = document.getElementById(id);
+    if (v === 1)      { b.className = "state-btn red";  b.textContent = "DÉFAUT"; }
+    else if (v === 0) { b.className = "state-btn gray"; b.textContent = "OK"; }
+    else              { b.className = "state-btn gray"; b.textContent = "--"; }
 }
 
+/* Tension : 1 = vert TENSION | 0 = rouge ABSENCE */
+function setTension(id, v) {
+    const b = document.getElementById(id);
+    if (v === 1)      { b.className = "state-btn green"; b.textContent = "TENSION"; }
+    else if (v === 0) { b.className = "state-btn red";   b.textContent = "ABSENCE"; }
+    else              { b.className = "state-btn gray";  b.textContent = "--"; }
+}
+
+/* ─── Supabase REST ─── */
 async function fetchLatest() {
     const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/measurements?device_id=eq.module_cta&order=timestamp.desc&limit=1`,
+        `${SUPABASE_URL}/rest/v1/measurements?device_id=eq.${DEVICE_ID}&order=timestamp.desc&limit=1`,
         { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` } }
     );
-    const data = await r.json();
-    return data[0];
+    if (!r.ok) throw new Error(`fetchLatest: ${r.status}`);
+    const d = await r.json();
+    return d[0] || null;
 }
 
-async function refresh() {
-    const d = await fetchLatest();
-    if (!d) return;
-
-    const ts = formatLocalTime(d.timestamp);
-
-    /* Groupe Froid 1 */
-    setMarche("gf1_marche", d.marche_groupe_froid_1);
-    setDefaut("gf1_defaut", d.defaut_groupe_froid_1);
-    document.getElementById("gf1_time").textContent = "Dernière mesure : " + ts;
-    updateStatusBadge("gf1_status", d.timestamp);
-
-    /* Groupe Froid 2 */
-    setMarche("gf2_marche", d.marche_groupe_froid_2);
-    setDefaut("gf2_defaut", d.defaut_groupe_froid_2);
-    document.getElementById("gf2_time").textContent = "Dernière mesure : " + ts;
-    updateStatusBadge("gf2_status", d.timestamp);
-
-    /* Tension armoire */
-    setTension("tension_btn", d.defaut_tension);
-    document.getElementById("tension_time").textContent = "Dernière mesure : " + ts;
-    updateStatusBadge("tension_status", d.timestamp);
+async function fetchRange(hours) {
+    const from = new Date(Date.now() - hours * 3600000).toISOString();
+    const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/measurements?device_id=eq.${DEVICE_ID}&timestamp=gte.${from}&order=timestamp.asc&limit=6000`,
+        { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` } }
+    );
+    if (!r.ok) throw new Error(`fetchRange: ${r.status}`);
+    return await r.json();
 }
 
-refresh();
-setInterval(refresh, 30000);
+/* ─── Refresh valeurs instantanées ─── */
+async function refreshValues() {
+    try {
+        const d = await fetchLatest();
+        if (!d) return;
+
+        const ts = d.timestamp;
+        const fmt = "Dernière mesure : " + formatLocalTime(ts);
+
+        /* GF1 */
+        setMarche("gf1_marche", d.marche_groupe_froid_1 !== undefined ? Number(d.marche_groupe_froid_1) : null);
+        setDefaut("gf1_defaut", d.defaut_groupe_froid_1 !== undefined ? Number(d.defaut_groupe_froid_1) : null);
+        document.getElementById("gf1_time").textContent = fmt;
+        setBadge("gf1_badge", ts);
+
+        /* GF2 */
+        setMarche("gf2_marche", d.marche_groupe_froid_2 !== undefined ? Number(d.marche_groupe_froid_2) : null);
+        setDefaut("gf2_defaut", d.defaut_groupe_froid_2 !== undefined ? Number(d.defaut_groupe_froid_2) : null);
+        document.getElementById("gf2_time").textContent = fmt;
+        setBadge("gf2_badge", ts);
+
+        /* Tension + défaut CTA */
+        setTension("tension_btn",     d.defaut_tension  !== undefined ? Number(d.defaut_tension)  : null);
+        setDefaut("defaut_cta_btn",   d.defaut_cta      !== undefined ? Number(d.defaut_cta)      : null);
+        document.getElementById("tension_time").textContent = fmt;
+        setBadge("tension_badge", ts);
+
+        /* Défaut variateur */
+        setDefaut("variateur_btn", d.defaut_variateur !== undefined ? Number(d.defaut_variateur) : null);
+        document.getElementById("variateur_time").textContent = fmt;
+        setBadge("variateur_badge", ts);
+
+    } catch (e) {
+        console.error("refreshValues:", e);
+    }
+}
+
+/* ─── Graphes stepped ─── */
+/*
+ * On crée un graphe stepped par section. Chaque graphe peut afficher
+ * deux séries simultanément (ex. Marche + Défaut sur le même canvas).
+ * Y axis : -0.2 … 1.2 pour bien voir les transitions 0/1.
+ */
+
+const CHART_ZOOM_OPTIONS = {
+    pan:  { enabled: true,  mode: "x" },
+    zoom: { wheel: { enabled: false }, pinch: { enabled: false }, drag: { enabled: false }, mode: "x" }
+};
+
+function buildSteppedDataset(data, field, label, color) {
+    const pts = data
+        .filter(d => d[field] !== null && d[field] !== undefined)
+        .map(d => ({
+            x: new Date(d.timestamp).toLocaleString("fr-FR", {
+                timeZone: "Europe/Paris",
+                day: "2-digit", month: "2-digit",
+                hour: "2-digit", minute: "2-digit", hour12: false
+            }),
+            y: Number(d[field])
+        }));
+    return {
+        label,
+        data: pts.map(p => p.y),
+        _labels: pts.map(p => p.x),
+        borderColor: color,
+        backgroundColor: color.replace(")", ", 0.08)").replace("rgb", "rgba"),
+        stepped: "before",
+        fill: true,
+        tension: 0,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        borderWidth: 2
+    };
+}
+
+function mergeLabels(...datasets) {
+    /* Tous les datasets ont potentiellement des labels différents si NULL filtré.
+       On prend l'union dans l'ordre chronologique du premier dataset non vide. */
+    for (const ds of datasets) {
+        if (ds._labels && ds._labels.length > 0) return ds._labels;
+    }
+    return [];
+}
+
+function createSteppedChart(canvasId, datasets) {
+    const ctx = document.getElementById(canvasId).getContext("2d");
+    const labels = mergeLabels(...datasets);
+    return new Chart(ctx, {
+        type: "line",
+        data: {
+            labels,
+            datasets: datasets.map(ds => {
+                const { _labels, ...rest } = ds;
+                return rest;
+            })
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            interaction: { mode: "nearest", intersect: false },
+            scales: {
+                x: {
+                    ticks: { color: "#94a3b8", maxRotation: 0, autoSkip: true, maxTicksLimit: 10 },
+                    grid:  { color: "rgba(148,163,184,0.08)" }
+                },
+                y: {
+                    min: -0.2,
+                    max: 1.2,
+                    ticks: {
+                        color: "#94a3b8",
+                        stepSize: 1,
+                        callback: v => v === 0 ? "0" : v === 1 ? "1" : ""
+                    },
+                    grid: { color: "rgba(148,163,184,0.08)" }
+                }
+            },
+            plugins: {
+                legend: { labels: { color: "#334155" } },
+                zoom: CHART_ZOOM_OPTIONS,
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` ${ctx.dataset.label} : ${ctx.parsed.y === 1 ? "ON/DÉFAUT" : "OFF/OK"}`
+                    }
+                }
+            }
+        }
+    });
+}
+
+/* ─── Registre des graphes et plages ─── */
+const charts = {};
+const ranges = {
+    gf1:      24,
+    gf2:      24,
+    tension:  24,
+    variateur:24
+};
+
+async function loadAllCharts() {
+    try {
+        const data = await fetchRange(Math.max(...Object.values(ranges)));
+
+        /* On recharge uniquement les sections dont la plage correspond
+           à la requête maximale, puis on filtre localement. */
+        await Promise.all([
+            rebuildChart("gf1",       data),
+            rebuildChart("gf2",       data),
+            rebuildChart("tension",   data),
+            rebuildChart("variateur", data)
+        ]);
+    } catch (e) {
+        console.error("loadAllCharts:", e);
+    }
+}
+
+async function rebuildChart(section, dataOverride) {
+    const hours = ranges[section];
+    let data;
+    if (dataOverride) {
+        const cutoff = Date.now() - hours * 3600000;
+        data = dataOverride.filter(d => new Date(d.timestamp).getTime() >= cutoff);
+    } else {
+        try { data = await fetchRange(hours); }
+        catch (e) { console.error(`rebuildChart(${section}):`, e); return; }
+    }
+
+    if (charts[section]) {
+        charts[section].destroy();
+        delete charts[section];
+    }
+
+    if (section === "gf1") {
+        charts.gf1 = createSteppedChart("gf1_chart", [
+            buildSteppedDataset(data, "marche_groupe_froid_1", "Marche GF1",  "rgb(34,197,94)"),
+            buildSteppedDataset(data, "defaut_groupe_froid_1", "Défaut GF1",  "rgb(239,68,68)")
+        ]);
+    } else if (section === "gf2") {
+        charts.gf2 = createSteppedChart("gf2_chart", [
+            buildSteppedDataset(data, "marche_groupe_froid_2", "Marche GF2",  "rgb(34,197,94)"),
+            buildSteppedDataset(data, "defaut_groupe_froid_2", "Défaut GF2",  "rgb(239,68,68)")
+        ]);
+    } else if (section === "tension") {
+        charts.tension = createSteppedChart("tension_chart", [
+            buildSteppedDataset(data, "defaut_tension", "Tension armoire", "rgb(59,130,246)"),
+            buildSteppedDataset(data, "defaut_cta",     "Défaut CTA",      "rgb(239,68,68)")
+        ]);
+    } else if (section === "variateur") {
+        charts.variateur = createSteppedChart("variateur_chart", [
+            buildSteppedDataset(data, "defaut_variateur", "Défaut variateur", "rgb(249,115,22)")
+        ]);
+    }
+}
+
+/* ─── Contrôles interactifs ─── */
+function setRange(section, hours, btn) {
+    /* Mettre à jour le bouton actif dans ce groupe */
+    const allBtns = btn.closest(".chart-controls").querySelectorAll(".range-btn");
+    allBtns.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    ranges[section] = hours;
+    rebuildChart(section, null);
+}
+
+function zoomChart(section, factor) {
+    if (charts[section]) charts[section].zoom(factor);
+}
+
+function resetChart(section) {
+    if (charts[section]) charts[section].resetZoom();
+}
+
+/* ─── Init ─── */
+refreshValues();
+loadAllCharts();
+
+setInterval(refreshValues, 30000);
+setInterval(loadAllCharts, 60000);
 </script>
 
+<!-- ─── Menu sidebar ─── -->
 <script>
 function toggleMenu() {
     const sidebar = document.getElementById("sidebar");
-    const main = document.querySelector(".main-content");
+    const main    = document.querySelector(".main-content");
     const overlay = document.getElementById("overlay");
     if (!sidebar || !main || !overlay) return;
     if (window.innerWidth <= 720) {
