@@ -1,0 +1,13 @@
+INFO:     192.168.0.100:51224 - "POST /data HTTP/1.1" 200 OK
+arduino_ntc_01 @ 2026-06-18T13:25:55.270215+02:00 | T=11.0008°C | Amp=12.40479 | CompTF=ON | CmdComp=ON
+Valeur transmise avec succès à SUPABASE
+INFO:     192.168.0.102:56494 - "POST /data HTTP/1.1" 200 OK
+module_cta @ 2026-06-18T13:26:02.588171+02:00 | MH=OFF | DH=OFF | MGF1=ON | DGF1=OFF | MGF2=OFF | DGF2=OFF | DT=ON | DfVar=OFF | DfCTA=OFF
+Valeur transmise avec succès à SUPABASE
+INFO:     192.168.0.103:54710 - "POST /data HTTP/1.1" 200 OK
+arduino_atmo @ 2026-06-18T13:26:48.960725+02:00 | T=21.46396°C | H=44.6604% | P=1019.011 hPa
+Valeur transmise avec succès à SUPABASE
+INFO:     192.168.0.100:51033 - "POST /data HTTP/1.1" 200 OK
+arduino_ntc_01 @ 2026-06-18T13:26:55.254720+02:00 | T=10.75843°C | Amp=12.45995 | CompTF=ON | CmdComp=ON
+Valeur transmise avec succès à SUPABASE
+INFO:     192.168.0.102:60799 - "POST /data HTTP/1.1" 200 OK
