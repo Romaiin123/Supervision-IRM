@@ -143,6 +143,56 @@
         @media (max-width: 1100px) {
             .status-grid { grid-template-columns: 1fr; }
         }
+
+        .alert-banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            border-left: 5px solid #94a3b8;
+            font-size: 1.02rem;
+        }
+
+        .alert-banner-icon {
+            font-size: 1.4rem;
+            line-height: 1.3;
+            flex: 0 0 auto;
+        }
+
+        .alert-banner-text {
+            flex: 1;
+            line-height: 1.5;
+        }
+
+        .alert-banner.is-loading {
+            border-left-color: #94a3b8;
+            background: var(--surface-2);
+            color: var(--muted);
+        }
+
+        .alert-banner.is-ok {
+            border-left-color: var(--green, #22c55e);
+            background: #ecfdf5;
+            color: #166534;
+            font-weight: 600;
+        }
+
+        .alert-banner.is-problem {
+            border-left-color: var(--red, #ef4444);
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .alert-list {
+            margin: 8px 0 0 0;
+            padding-left: 20px;
+            font-weight: 500;
+        }
+
+        .alert-list li {
+            margin-bottom: 6px;
+        }
     </style>
 </head>
 <body>
@@ -180,6 +230,10 @@
                 <div class="topbar-actions"><span class="badge-soft">Supabase REST</span><span class="badge-soft">Lecture seule</span></div>
             </div>
             <div class="container">
+                <div class="card alert-banner is-loading" id="alert_banner">
+                    <span class="alert-banner-icon">⏳</span>
+                    <span class="alert-banner-text">Vérification des seuils de surveillance…</span>
+                </div>
                 <div class="status-grid">
 
                     <div class="card status-card" id="card_atmo">
@@ -246,6 +300,10 @@ const MODULES = [
     { id: "arduino_cta",    key: "cta"  }
 ];
 
+const CONFIG_SEUILS_PATH = "config_seuils.json";
+let seuilsConfig = null;
+const latestByDevice = {};
+
 function formatLocalTime(utcString) {
     const date = new Date(utcString);
     const options = {
@@ -292,6 +350,7 @@ function setPill(key, cls, text) {
 async function refreshModule(mod) {
     try {
         const row = await fetchLatest(mod.id);
+        latestByDevice[mod.id] = row || null;
 
         if (!row || !row.timestamp) {
             setPill(mod.key, "is-offline", "Aucune donnée");
@@ -313,21 +372,96 @@ async function refreshModule(mod) {
         document.getElementById("rel_" + mod.key).textContent = relativeTime(diffMin);
         document.getElementById("abs_" + mod.key).textContent = formatLocalTime(row.timestamp);
     } catch (e) {
+        latestByDevice[mod.id] = null;
         setPill(mod.key, "is-offline", "Erreur réseau");
         document.getElementById("rel_" + mod.key).textContent = "—";
         document.getElementById("abs_" + mod.key).textContent = "";
     }
 }
 
+/* ===== SEUILS / BANDEAU D'ALERTE ===== */
+
+async function loadSeuilsConfig() {
+    try {
+        const res = await fetch(CONFIG_SEUILS_PATH + "?v=" + Date.now());
+        if (!res.ok) throw new Error("config_seuils.json introuvable");
+        seuilsConfig = await res.json();
+    } catch (e) {
+        console.error("Impossible de charger config_seuils.json :", e);
+        seuilsConfig = null;
+    }
+}
+
+function checkThresholds() {
+    const banner = document.getElementById("alert_banner");
+    if (!banner) return;
+
+    if (!seuilsConfig) {
+        banner.className = "card alert-banner is-loading";
+        banner.innerHTML = `<span class="alert-banner-icon">⏳</span><span class="alert-banner-text">Impossible de vérifier les seuils (config_seuils.json inaccessible).</span>`;
+        return;
+    }
+
+    const problems = [];
+
+    MODULES.forEach(mod => {
+        const cfg = seuilsConfig[mod.id];
+        const row = latestByDevice[mod.id];
+        if (!cfg || !row) return;
+
+        for (const champ in cfg) {
+            const rule = cfg[champ];
+            if (!rule || !rule.enabled) continue;
+
+            const raw = row[champ];
+            if (raw === null || raw === undefined) continue;
+
+            if (Array.isArray(rule.expected)) {
+                const value = Number(raw);
+                if (!rule.expected.includes(value)) {
+                    problems.push((rule.message_expected || `${rule.label} : état anormal.`) + " Une alerte est envoyée par mail, veuillez vérifier !");
+                }
+                continue;
+            }
+
+            const value = Number(raw);
+            if (isNaN(value)) continue;
+
+            if (rule.min !== undefined && value < rule.min) {
+                problems.push(`${rule.label} trop basse (${value}${rule.unit ? " " + rule.unit : ""}). Une alerte est envoyée par mail, veuillez vérifier !`);
+            } else if (rule.max !== undefined && value > rule.max) {
+                problems.push(`${rule.label} trop élevée (${value}${rule.unit ? " " + rule.unit : ""}). Une alerte est envoyée par mail, veuillez vérifier !`);
+            }
+        }
+    });
+
+    if (problems.length === 0) {
+        banner.className = "card alert-banner is-ok";
+        banner.innerHTML = `<span class="alert-banner-icon">✅</span><span class="alert-banner-text">Tout va bien Jean-Luc, le système ne présente aucune valeur hors des seuils.</span>`;
+    } else {
+        banner.className = "card alert-banner is-problem";
+        const items = problems.map(p => `<li>${p}</li>`).join("");
+        banner.innerHTML = `
+            <span class="alert-banner-icon">⚠️</span>
+            <span class="alert-banner-text">
+                ${problems.length} grandeur${problems.length > 1 ? "s" : ""} hors seuil :
+                <ul class="alert-list">${items}</ul>
+            </span>`;
+    }
+}
+
 async function refreshAll() {
     await Promise.all(MODULES.map(refreshModule));
+    checkThresholds();
     const now = new Date().toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris", hour12: false });
     document.getElementById("refresh_note").textContent =
         `Actualisation automatique toutes les 30 secondes — dernière mise à jour à ${now}.`;
 }
 
-refreshAll();
-setInterval(refreshAll, 30000);
+loadSeuilsConfig().then(() => {
+    refreshAll();
+    setInterval(refreshAll, 30000);
+});
 </script>
 <script>
 function toggleMenu() {
