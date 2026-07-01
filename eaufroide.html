@@ -176,6 +176,7 @@
                 <option value="48">48 h</option>
                 <option value="72">3 jours</option>
                 <option value="96">4 jours</option>
+                <option value="168">7 jours</option>
             </select>
             <button onclick="zoomIn()">Zoom X +</button>
             <button onclick="zoomOut()">Zoom X -</button>
@@ -262,7 +263,7 @@ async function fetchRange(device, hours) {
     const startDate = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 
     const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/measurements?device_id=eq.${device}&timestamp=gte.${startDate}&order=timestamp.asc&limit=6000`,
+        `${SUPABASE_URL}/rest/v1/measurements?device_id=eq.${device}&timestamp=gte.${startDate}&order=timestamp.asc&limit=12000`,
         {
             headers: {
                 "apikey": SUPABASE_KEY,
