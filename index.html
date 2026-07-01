@@ -437,7 +437,7 @@ function checkThresholds() {
 
     if (problems.length === 0) {
         banner.className = "card alert-banner is-ok";
-        banner.innerHTML = `<span class="alert-banner-icon">✅</span><span class="alert-banner-text">Tout va bien Jean-Luc, le système ne présente aucune valeur hors des seuils.</span>`;
+        banner.innerHTML = `<span class="alert-banner-icon"></span><span class="alert-banner-text">Tout va bien Jean-Luc, le système ne présente aucune valeur hors des seuils.</span>`;
     } else {
         banner.className = "card alert-banner is-problem";
         const items = problems.map(p => `<li>${p}</li>`).join("");
