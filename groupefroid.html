@@ -56,6 +56,17 @@ canvas { margin-top: 20px; }
     font-size: 0.92rem;
 }
 
+.subchart-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 18px 0 2px 0;
+}
+
+.subchart-label:first-of-type {
+    margin-top: 14px;
+}
+
 /* ── État instantané ── */
 .state-row {
     display: flex;
@@ -196,7 +207,12 @@ canvas { margin-top: 20px; }
             <button onclick="resetZoom('gf1')">Réinitialiser zoom</button>
         </div>
         <div class="info-note">Clic maintenu + déplacement = navigation dans le graphe</div>
-        <canvas id="gf1_chart" height="120"></canvas>
+
+        <div class="subchart-label">Marche</div>
+        <canvas id="gf1_marche_chart" height="90"></canvas>
+
+        <div class="subchart-label">Défaut</div>
+        <canvas id="gf1_defaut_chart" height="90"></canvas>
     </div>
 </div>
 
@@ -237,7 +253,12 @@ canvas { margin-top: 20px; }
             <button onclick="resetZoom('gf2')">Réinitialiser zoom</button>
         </div>
         <div class="info-note">Clic maintenu + déplacement = navigation dans le graphe</div>
-        <canvas id="gf2_chart" height="120"></canvas>
+
+        <div class="subchart-label">Marche</div>
+        <canvas id="gf2_marche_chart" height="90"></canvas>
+
+        <div class="subchart-label">Défaut</div>
+        <canvas id="gf2_defaut_chart" height="90"></canvas>
     </div>
 </div>
 
@@ -278,7 +299,12 @@ canvas { margin-top: 20px; }
             <button onclick="resetZoom('tension')">Réinitialiser zoom</button>
         </div>
         <div class="info-note">Clic maintenu + déplacement = navigation dans le graphe</div>
-        <canvas id="tension_chart" height="120"></canvas>
+
+        <div class="subchart-label">Tension armoire</div>
+        <canvas id="tension_state_chart" height="90"></canvas>
+
+        <div class="subchart-label">Défaut CTA</div>
+        <canvas id="tension_defautcta_chart" height="90"></canvas>
     </div>
 </div>
 
@@ -335,7 +361,7 @@ const DEVICE_ID     = "arduino_cta";
 const FRESHNESS_MIN = 5;
 
 /* ─── Registres ─── */
-const charts = {};            /* gf1 | gf2 | tension | variateur → Chart instance */
+const charts = {};            /* gf1 | gf2 | tension | variateur → { cle: Chart instance } */
 const dataCache = {};         /* idem → dernière donnée fetchée */
 const rangeHours = {          /* plages actuelles */
     gf1: 24, gf2: 24, tension: 24, variateur: 24
@@ -377,43 +403,43 @@ function setBadge(id, ts) {
 
 /* ─── Boutons d'état instantané ─── */
 
-/*  GF – marche_groupe_froid_X : 1 = Marche / 0 = Arrêt    */
+/*  GF – marche_groupe_froid_X : 1 = En marche / 0 = En veille    */
 function setMarche(id, v) {
     const b = document.getElementById(id);
-    if (v === 1)      { b.className = "state-btn green";  b.textContent = "Marche"; }
-    else if (v === 0) { b.className = "state-btn gray";   b.textContent = "Arrêt"; }
-    else              { b.className = "state-btn gray";   b.textContent = "--"; }
+    if (v === 1)      { b.className = "state-btn green"; b.textContent = "En marche"; }
+    else if (v === 0) { b.className = "state-btn gray";  b.textContent = "En veille"; }
+    else              { b.className = "state-btn gray";  b.textContent = "--"; }
 }
 
-/*  GF – defaut_groupe_froid_X : 0 = OK / 1 = Défaut        */
+/*  GF – defaut_groupe_froid_X : 0 = Aucun défaut / 1 = Problème  */
 function setDefautGF(id, v) {
     const b = document.getElementById(id);
-    if (v === 1)      { b.className = "state-btn red";   b.textContent = "Défaut"; }
-    else if (v === 0) { b.className = "state-btn gray";  b.textContent = "OK"; }
+    if (v === 1)      { b.className = "state-btn red";   b.textContent = "Problème"; }
+    else if (v === 0) { b.className = "state-btn green"; b.textContent = "Aucun défaut"; }
     else              { b.className = "state-btn gray";  b.textContent = "--"; }
 }
 
-/*  Tension armoire : 1 = Tension / 0 = Absence              */
+/*  Tension armoire : 1 = Sous tension / 0 = Hors tension          */
 function setTension(id, v) {
     const b = document.getElementById(id);
-    if (v === 1)      { b.className = "state-btn green"; b.textContent = "Tension"; }
-    else if (v === 0) { b.className = "state-btn red";   b.textContent = "Absence"; }
+    if (v === 1)      { b.className = "state-btn green"; b.textContent = "Sous tension"; }
+    else if (v === 0) { b.className = "state-btn red";   b.textContent = "Hors tension"; }
     else              { b.className = "state-btn gray";  b.textContent = "--"; }
 }
 
-/*  Défaut CTA : 0 = OK / 1 = Défaut                         */
+/*  Défaut CTA : 0 = Aucun défaut / 1 = Problème                   */
 function setDefautCTA(id, v) {
     const b = document.getElementById(id);
-    if (v === 1)      { b.className = "state-btn red";   b.textContent = "Défaut"; }
-    else if (v === 0) { b.className = "state-btn gray";  b.textContent = "OK"; }
+    if (v === 1)      { b.className = "state-btn red";   b.textContent = "Problème"; }
+    else if (v === 0) { b.className = "state-btn green"; b.textContent = "Aucun défaut"; }
     else              { b.className = "state-btn gray";  b.textContent = "--"; }
 }
 
-/*  Variateur : 0 = OK / 1 = Défaut                          */
+/*  Variateur : 0 = Aucun défaut / 1 = Problème                    */
 function setDefautVariateur(id, v) {
     const b = document.getElementById(id);
-    if (v === 1)      { b.className = "state-btn red";   b.textContent = "Défaut"; }
-    else if (v === 0) { b.className = "state-btn gray";  b.textContent = "OK"; }
+    if (v === 1)      { b.className = "state-btn red";   b.textContent = "Problème"; }
+    else if (v === 0) { b.className = "state-btn green"; b.textContent = "Aucun défaut"; }
     else              { b.className = "state-btn gray";  b.textContent = "--"; }
 }
 
@@ -473,14 +499,12 @@ async function refreshValues() {
 /* ─── Construction des graphes ─── */
 
 /*
- * Légende axe Y pour GF et Tension/CTA
- *   -1 = Défaut
- *    0 = Arrêt / Absence
- *    1 = Marche / Tension
- *
- * Pour le variateur :
- *    0 = OK
- *    1 = Défaut
+ * Chaque grandeur logique a désormais son propre mini-graphe binaire (0/1),
+ * avec ses propres étiquettes d'axe Y :
+ *   Marche          : 0 = En veille      / 1 = En marche
+ *   Défaut / CTA    : 0 = Aucun défaut   / 1 = Problème
+ *   Tension armoire : 0 = Hors tension   / 1 = Sous tension
+ *   Variateur       : 0 = Aucun défaut   / 1 = Problème
  */
 
 const ZOOM_OPTIONS = {
@@ -488,29 +512,15 @@ const ZOOM_OPTIONS = {
     zoom: { wheel: { enabled: false }, pinch: { enabled: false }, drag: { enabled: false }, mode: "xy" }
 };
 
-/* Axe Y avec ticks nommés — pour GF et Tension */
-function yScaleNamed(tickMap) {
-    return {
-        min: -1.4,
-        max:  1.4,
-        ticks: {
-            color: "#94a3b8",
-            stepSize: 1,
-            callback: v => tickMap[v] !== undefined ? tickMap[v] : ""
-        },
-        grid: { color: "rgba(148,163,184,0.15)" }
-    };
-}
-
-/* Axe Y simple 0/1 pour variateur */
-function yScaleBinary() {
+/* Axe Y binaire avec étiquettes personnalisées */
+function yScaleBinary(tickMap) {
     return {
         min: -0.3,
         max:  1.3,
         ticks: {
             color: "#94a3b8",
             stepSize: 1,
-            callback: v => v === 0 ? "OK" : v === 1 ? "Défaut" : ""
+            callback: v => tickMap[v] !== undefined ? tickMap[v] : ""
         },
         grid: { color: "rgba(148,163,184,0.15)" }
     };
@@ -561,7 +571,7 @@ function makeChart(canvasId, datasets, yScale, tooltipFn) {
                 y: yScale
             },
             plugins: {
-                legend: { labels: { color: "#e2e8f0" } },
+                legend: { display: false },
                 zoom: ZOOM_OPTIONS,
                 tooltip: { callbacks: { label: tooltipFn } }
             }
@@ -569,30 +579,14 @@ function makeChart(canvasId, datasets, yScale, tooltipFn) {
     });
 }
 
-/* Tooltip GF (valeur → texte) */
-function tooltipGF(ctx) {
-    const v = ctx.parsed.y;
-    const s = v === 1 ? "Marche" : v === 0 ? "Arrêt" : v === -1 ? "Défaut" : v;
-    return ` ${ctx.dataset.label} : ${s}`;
+/* Fabrique un tooltip générique à partir d'une correspondance valeur → libellé */
+function tooltipFor(tickMap) {
+    return ctx => ` ${ctx.dataset.label} : ${tickMap[ctx.parsed.y] !== undefined ? tickMap[ctx.parsed.y] : ctx.parsed.y}`;
 }
 
-/* Tooltip Tension/CTA */
-function tooltipTension(ctx) {
-    const v = ctx.parsed.y;
-    let s;
-    if (ctx.dataset.label.includes("Tension")) {
-        s = v === 1 ? "Tension" : v === 0 ? "Absence" : v === -1 ? "Défaut" : v;
-    } else {
-        s = v === 1 ? "Marche" : v === 0 ? "Arrêt" : v === -1 ? "Défaut" : v;
-    }
-    return ` ${ctx.dataset.label} : ${s}`;
-}
-
-/* Tooltip variateur */
-function tooltipVariateur(ctx) {
-    const v = ctx.parsed.y;
-    return ` ${ctx.dataset.label} : ${v === 0 ? "OK" : v === 1 ? "Défaut" : v}`;
-}
+const MARCHE_TICKS   = { 0: "En veille",    1: "En marche" };
+const DEFAUT_TICKS   = { 0: "Aucun défaut", 1: "Problème" };
+const TENSION_TICKS  = { 0: "Hors tension", 1: "Sous tension" };
 
 /* ─── Chargement/rechargement ─── */
 async function loadChart(section) {
@@ -600,33 +594,42 @@ async function loadChart(section) {
         const data = await fetchRange(rangeHours[section]);
         dataCache[section] = data;
 
-        if (charts[section]) { charts[section].destroy(); delete charts[section]; }
-
-        const GF_TICKS  = { [-1]: "Défaut", 0: "Arrêt", 1: "Marche" };
-        const TEN_TICKS = { [-1]: "Défaut", 0: "Absence", 1: "Tension" };
+        if (charts[section]) {
+            Object.values(charts[section]).forEach(c => c && c.destroy());
+        }
+        charts[section] = {};
 
         if (section === "gf1") {
-            charts.gf1 = makeChart("gf1_chart", [
-                buildDataset(data, "marche_groupe_froid_1", "Marche GF1", "rgb(34,197,94)"),
+            charts.gf1.marche = makeChart("gf1_marche_chart", [
+                buildDataset(data, "marche_groupe_froid_1", "Marche GF1", "rgb(34,197,94)")
+            ], yScaleBinary(MARCHE_TICKS), tooltipFor(MARCHE_TICKS));
+
+            charts.gf1.defaut = makeChart("gf1_defaut_chart", [
                 buildDataset(data, "defaut_groupe_froid_1", "Défaut GF1", "rgb(239,68,68)")
-            ], yScaleNamed(GF_TICKS), tooltipGF);
+            ], yScaleBinary(DEFAUT_TICKS), tooltipFor(DEFAUT_TICKS));
 
         } else if (section === "gf2") {
-            charts.gf2 = makeChart("gf2_chart", [
-                buildDataset(data, "marche_groupe_froid_2", "Marche GF2", "rgb(34,197,94)"),
+            charts.gf2.marche = makeChart("gf2_marche_chart", [
+                buildDataset(data, "marche_groupe_froid_2", "Marche GF2", "rgb(34,197,94)")
+            ], yScaleBinary(MARCHE_TICKS), tooltipFor(MARCHE_TICKS));
+
+            charts.gf2.defaut = makeChart("gf2_defaut_chart", [
                 buildDataset(data, "defaut_groupe_froid_2", "Défaut GF2", "rgb(239,68,68)")
-            ], yScaleNamed(GF_TICKS), tooltipGF);
+            ], yScaleBinary(DEFAUT_TICKS), tooltipFor(DEFAUT_TICKS));
 
         } else if (section === "tension") {
-            charts.tension = makeChart("tension_chart", [
-                buildDataset(data, "defaut_tension", "Tension armoire", "rgb(59,130,246)"),
-                buildDataset(data, "defaut_cta",     "Défaut CTA",      "rgb(239,68,68)")
-            ], yScaleNamed(TEN_TICKS), tooltipTension);
+            charts.tension.etat = makeChart("tension_state_chart", [
+                buildDataset(data, "defaut_tension", "Tension armoire", "rgb(59,130,246)")
+            ], yScaleBinary(TENSION_TICKS), tooltipFor(TENSION_TICKS));
+
+            charts.tension.defautcta = makeChart("tension_defautcta_chart", [
+                buildDataset(data, "defaut_cta", "Défaut CTA", "rgb(239,68,68)")
+            ], yScaleBinary(DEFAUT_TICKS), tooltipFor(DEFAUT_TICKS));
 
         } else if (section === "variateur") {
-            charts.variateur = makeChart("variateur_chart", [
+            charts.variateur.etat = makeChart("variateur_chart", [
                 buildDataset(data, "defaut_variateur", "Défaut variateur", "rgb(249,115,22)")
-            ], yScaleBinary(), tooltipVariateur);
+            ], yScaleBinary(DEFAUT_TICKS), tooltipFor(DEFAUT_TICKS));
         }
 
     } catch (e) { console.error(`loadChart(${section}):`, e); }
@@ -634,22 +637,29 @@ async function loadChart(section) {
 
 /* ─── Zoom / pan ─── */
 function zoomX(section, factor) {
-    if (charts[section]) charts[section].zoom({ x: factor });
+    const set = charts[section];
+    if (!set) return;
+    Object.values(set).forEach(c => c && c.zoom({ x: factor }));
 }
 
 function zoomY(section, factor) {
-    const c = charts[section];
-    if (!c) return;
-    const ys     = c.options.scales.y;
-    const center = (ys.min + ys.max) / 2;
-    const half   = ((ys.max - ys.min) / 2) * factor;
-    ys.min = Math.round((center - half) * 100) / 100;
-    ys.max = Math.round((center + half) * 100) / 100;
-    c.update();
+    const set = charts[section];
+    if (!set) return;
+    Object.values(set).forEach(c => {
+        if (!c) return;
+        const ys     = c.options.scales.y;
+        const center = (ys.min + ys.max) / 2;
+        const half   = ((ys.max - ys.min) / 2) * factor;
+        ys.min = Math.round((center - half) * 100) / 100;
+        ys.max = Math.round((center + half) * 100) / 100;
+        c.update();
+    });
 }
 
 function resetZoom(section) {
-    if (charts[section]) charts[section].resetZoom();
+    const set = charts[section];
+    if (!set) return;
+    Object.values(set).forEach(c => c && c.resetZoom());
 }
 
 /* ─── Sélecteurs de plage ─── */
