@@ -309,10 +309,11 @@ async function fetchLatest(device) {
 async function fetchRange(device, hours) {
     const startDate = new Date(Date.now() - hours * 3600 * 1000).toISOString();
     const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/measurements?device_id=eq.${device}&timestamp=gte.${startDate}&order=timestamp.asc&limit=12000`,
+        `${SUPABASE_URL}/rest/v1/measurements?device_id=eq.${device}&timestamp=gte.${startDate}&order=timestamp.desc&limit=12000`,
         { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` } }
     );
-    return await res.json();
+    const data = await res.json();
+    return data.reverse();
 }
 
 function buildLabels(data) {
