@@ -179,7 +179,7 @@ canvas { margin-top: 20px; }
 
     <div class="state-row">
         <div class="state-col">
-            <div class="btn-label">Marche</div>
+            <div class="btn-label">État</div>
             <button id="gf1_marche" class="state-btn gray">--</button>
         </div>
         <div class="state-col">
@@ -208,7 +208,7 @@ canvas { margin-top: 20px; }
         </div>
         <div class="info-note">Clic maintenu + déplacement = navigation dans le graphe</div>
 
-        <div class="subchart-label">Marche</div>
+        <div class="subchart-label">État</div>
         <canvas id="gf1_marche_chart" height="90"></canvas>
 
         <div class="subchart-label">Défaut</div>
@@ -225,7 +225,7 @@ canvas { margin-top: 20px; }
 
     <div class="state-row">
         <div class="state-col">
-            <div class="btn-label">Marche</div>
+            <div class="btn-label">État</div>
             <button id="gf2_marche" class="state-btn gray">--</button>
         </div>
         <div class="state-col">
@@ -254,7 +254,7 @@ canvas { margin-top: 20px; }
         </div>
         <div class="info-note">Clic maintenu + déplacement = navigation dans le graphe</div>
 
-        <div class="subchart-label">Marche</div>
+        <div class="subchart-label">État</div>
         <canvas id="gf2_marche_chart" height="90"></canvas>
 
         <div class="subchart-label">Défaut</div>
@@ -601,7 +601,7 @@ async function loadChart(section) {
 
         if (section === "gf1") {
             charts.gf1.marche = makeChart("gf1_marche_chart", [
-                buildDataset(data, "marche_groupe_froid_1", "Marche GF1", "rgb(34,197,94)")
+                buildDataset(data, "marche_groupe_froid_1", "État GF1", "rgb(34,197,94)")
             ], yScaleBinary(MARCHE_TICKS), tooltipFor(MARCHE_TICKS));
 
             charts.gf1.defaut = makeChart("gf1_defaut_chart", [
@@ -610,7 +610,7 @@ async function loadChart(section) {
 
         } else if (section === "gf2") {
             charts.gf2.marche = makeChart("gf2_marche_chart", [
-                buildDataset(data, "marche_groupe_froid_2", "Marche GF2", "rgb(34,197,94)")
+                buildDataset(data, "marche_groupe_froid_2", "État GF2", "rgb(34,197,94)")
             ], yScaleBinary(MARCHE_TICKS), tooltipFor(MARCHE_TICKS));
 
             charts.gf2.defaut = makeChart("gf2_defaut_chart", [
