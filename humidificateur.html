@@ -375,7 +375,7 @@ function makeChart(canvasId, datasets, yScale, tooltipFn) {
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            interaction: { mode: "nearest", intersect: false },
+            interaction: { mode: "index", intersect: false, axis: "x" },
             scales: {
                 x: {
                     ticks: { color: "#94a3b8", maxRotation: 0, autoSkip: true, maxTicksLimit: 10 },
