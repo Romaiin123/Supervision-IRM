@@ -30,8 +30,8 @@
   },
   "arduino_ntc_01": {
     "temperature": {
-      "min": 3.0,
-      "max": 14.0,
+      "min": 8.0,
+      "max": 14.5,
       "unit": "C",
       "enabled": true,
       "label": "Temperature eau glacee",
@@ -39,7 +39,7 @@
       "message_high": "Alerte eau glacee trop elevee. Veuillez verifier le circuit d eau glacee."
     },
     "amplitude": {
-      "min": 5,
+      "min": 8,
       "max": 120.0,
       "unit": "RMS",
       "enabled": true,
