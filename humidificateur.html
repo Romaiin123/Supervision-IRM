@@ -168,7 +168,7 @@ canvas { margin-top: 20px; }
 
     <div class="state-row">
         <div class="state-col">
-            <div class="btn-label">Marche</div>
+            <div class="btn-label">État</div>
             <button id="humid_marche" class="state-btn gray">--</button>
         </div>
         <div class="state-col">
@@ -256,19 +256,19 @@ function setBadge(id, ts) {
 
 /* ─── Boutons d'état instantané ─── */
 
-/*  marche_humidificateur : 1 = Marche / 0 = Arrêt  */
+/*  marche_humidificateur : 1 = En marche / 0 = En veille  */
 function setMarche(id, v) {
     const b = document.getElementById(id);
-    if (v === 1)      { b.className = "state-btn green";  b.textContent = "Marche"; }
-    else if (v === 0) { b.className = "state-btn gray";   b.textContent = "Arrêt"; }
-    else              { b.className = "state-btn gray";   b.textContent = "--"; }
+    if (v === 1)      { b.className = "state-btn green"; b.textContent = "En marche"; }
+    else if (v === 0) { b.className = "state-btn gray";  b.textContent = "En veille"; }
+    else              { b.className = "state-btn gray";  b.textContent = "--"; }
 }
 
-/*  defaut_humidificateur : 0 = OK / 1 = Défaut  */
+/*  defaut_humidificateur : 0 = Aucun défaut / 1 = Problème  */
 function setDefaut(id, v) {
     const b = document.getElementById(id);
-    if (v === 1)      { b.className = "state-btn red";   b.textContent = "Défaut"; }
-    else if (v === 0) { b.className = "state-btn gray";  b.textContent = "OK"; }
+    if (v === 1)      { b.className = "state-btn red";   b.textContent = "Problème"; }
+    else if (v === 0) { b.className = "state-btn green"; b.textContent = "Aucun défaut"; }
     else              { b.className = "state-btn gray";  b.textContent = "--"; }
 }
 
