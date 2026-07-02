@@ -332,8 +332,9 @@ function createChart(data) {
             responsive: true,
             maintainAspectRatio: true,
             interaction: {
-                mode: "nearest",
-                intersect: false
+                mode: "index",
+                intersect: false,
+                axis: "x"
             },
             scales: {
                 x: {
