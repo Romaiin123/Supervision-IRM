@@ -30,8 +30,8 @@
   },
   "arduino_ntc_01": {
     "temperature": {
-      "min": 3.0,
-      "max": 14.0,
+      "min": 6.0,
+      "max": 14.5,
       "unit": "C",
       "enabled": true,
       "label": "Temperature eau glacee",
