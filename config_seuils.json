@@ -30,8 +30,8 @@
   },
   "arduino_ntc_01": {
     "temperature": {
-      "min": 8.0,
-      "max": 14.5,
+      "min": 3.0,
+      "max": 14.0,
       "unit": "C",
       "enabled": true,
       "label": "Temperature eau glacee",
@@ -39,7 +39,7 @@
       "message_high": "Alerte eau glacee trop elevee. Veuillez verifier le circuit d eau glacee."
     },
     "amplitude": {
-      "min": 8,
+      "min": 5,
       "max": 120.0,
       "unit": "RMS",
       "enabled": true,
@@ -62,7 +62,7 @@
       "message_expected": "Alerte commande compresseur incorrecte. La valeur attendue est 1."
     }
   },
-  "module_cta": {
+  "arduino_cta": {
     "marche_humidificateur": {
       "expected": [1],
       "unit": "state",
