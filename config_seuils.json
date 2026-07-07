@@ -39,7 +39,7 @@
       "message_high": "Alerte eau glacee trop elevee. Veuillez verifier le circuit d eau glacee."
     },
     "amplitude": {
-      "min": 4,5,
+      "min": 4.5,
       "max": 120.0,
       "unit": "RMS",
       "enabled": true,
